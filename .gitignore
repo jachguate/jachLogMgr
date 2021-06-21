@@ -1,2 +1,7 @@
 /README.md.backup
 *.local
+*.dsk
+Win32
+Win64
+__history
+*.identcache
