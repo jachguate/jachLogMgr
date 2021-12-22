@@ -96,6 +96,7 @@ type
     class procedure ForceLog(Proc: TProc); static;
     class procedure ForceLogMessage(const S: string); overload; static;
     class procedure ForceLogMessage(const S: string; const Args: array of const); overload; static;
+    class procedure ForceLogError(const S: string); overload; static;
     class procedure ForceLogError(E: Exception); overload; static;
     class procedure ForceLogError(E: Exception; const ExtraMsg: string); overload; static;
     class procedure ForceLogError(E: Exception; const S: string; const Args: array of const); overload; static;
@@ -312,6 +313,19 @@ begin
   try
     IsActive := True;
     Proc();
+  finally
+    IsActive := WasActive;
+  end;
+end;
+
+class procedure TjachLog.ForceLogError(const S: string);
+var
+  WasActive: Boolean;
+begin
+  WasActive := IsActive;
+  try
+    IsActive := True;
+    LogError(S);
   finally
     IsActive := WasActive;
   end;
