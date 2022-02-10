@@ -32,49 +32,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 
-
-{$define AutoRegisterDiskLogger}
-
 unit UjachLogMgr;
 
 interface
 uses Classes, SysUtils, System.Types, SyncObjs, System.Generics.Collections;
 
 type
-  TObjectReferenceToLoggerProc = record
-    AObject: TObject;
-    ALoggerProcIndex: Integer;
-  end;
-
   TLogType = (ltDebug, ltInfo, ltMessage, ltWarn, ltError, ltFatalError);
 
-  //TLoggerProcedure = TProc<TLogType, string>;
-  TLoggerProcedure = reference to procedure (ALogType: TLogType; const S: string);
+  TjachLogWriter = class
+  protected
+    procedure OpenLogChannel; virtual; abstract;
+    procedure CloseLogChannel; virtual; abstract;
+    procedure Write(ALogType: TLogType; const S, AIndentSpaces: string;
+      const AThreadID: TThreadID; const ADateTime: TDateTime); virtual; abstract;
+    function GetLock: TCriticalSection; virtual; abstract;
+  public
+    property Lock: TCriticalSection read GetLock;
+  end;
+
 
   TjachLog = record
   private
     class var FCS: TCriticalSection;
-    class var FRegisteredLoggers: TList<TLoggerProcedure>;
-    class var FRegisteredObjects: TList<TObjectReferenceToLoggerProc>;
-    class var FFileSuffix: string;
-    class var IndentSpaces: string;
-    class procedure RotateLogs(LogFileName: string); static;
+    class var FRegisteredLoggers: TObjectList<TjachLogWriter>;
+    class var FIndentSpaces: string;
+    class var FCacheCS: TCriticalSection;
     class function GetExceptionStr(E: Exception): string; static;
-    class procedure DiskLogger(ALogType: TLogType; const S: string); static;
   public
     class var IsActive: Boolean;
-    class var MaxFileSize: Integer;
-
     class procedure IncIndent; static;
     class procedure DecIndent; static;
-    class function RegisterLoggerProc(AProc: TLoggerProcedure): Integer; static;
-    class procedure RegisterDiskLoggerProc; static;
+
+    class procedure RegisterLogger(ALogger: TjachLogWriter); static;
     class function GetIndentSpaces: string; static; inline;
-    class procedure RegisterObjectLoggerProc(AProc: TLoggerProcedure; AObject: TObject); static;
-    class procedure UnregisterObjectLoggerProc(AObject: TObject); static;
-    class procedure SetFileSuffix(AFileSuffix: string); static;
 
     class procedure Log(ALogType: TLogType; const S: string); static;
+
     class procedure LogDebug(const S: string); overload; static;
     class procedure LogDebug(const S: string; const Args: array of const); overload; static;
     class procedure LogInfo(const S: string); overload; static;
@@ -93,6 +87,32 @@ type
     class procedure LogFatalError(E: Exception; const ExtraMsg: string); overload; static;
     class procedure LogFatalError(E: Exception; const S: string; const Args: array of const); overload; static;
     class procedure LogFatalError(E: Exception); overload; static;
+
+    class procedure CacheLog(ALogType: TLogType; const S: string); static;
+
+    class procedure CacheLogDebug(const S: string); overload; static;
+    class procedure CacheLogDebug(const S: string; const Args: array of const); overload; static;
+    class procedure CacheLogInfo(const S: string); overload; static;
+    class procedure CacheLogInfo(const S: string; const Args: array of const); overload; static;
+    class procedure CacheLogMessage(const S: string); overload; static;
+    class procedure CacheLogMessage(const S: string; const Args: array of const); overload; static;
+    class procedure CacheLogWarn(const S: string); overload; static;
+    class procedure CacheLogWarn(const S: string; const Args: array of const); overload; static;
+
+    class procedure CacheLogError(const S: string); overload; static;
+    class procedure CacheLogError(E: Exception; const ExtraMsg: string); overload; static;
+    class procedure CacheLogError(E: Exception; const S: string; const Args: array of const); overload; static;
+    class procedure CacheLogError(E: Exception); overload; static;
+
+    class procedure CacheLogFatalError(const S: string); overload; static;
+    class procedure CacheLogFatalError(E: Exception; const ExtraMsg: string); overload; static;
+    class procedure CacheLogFatalError(E: Exception; const S: string; const Args: array of const); overload; static;
+    class procedure CacheLogFatalError(E: Exception); overload; static;
+
+    class procedure CacheClear; static;
+    class procedure WriteCachedLog; static;
+    class procedure ForceWriteCachedLog; static;
+
     class procedure ForceLog(Proc: TProc); static;
     class procedure ForceLogMessage(const S: string); overload; static;
     class procedure ForceLogMessage(const S: string; const Args: array of const); overload; static;
@@ -111,14 +131,38 @@ const
 
 implementation
 uses StrUtils,
-{$ifdef MSWindows}
-Windows,
-{$endif}
-{$ifdef HAS_EXCEPTION_STACKTRACE}
-JclDebug,
-{$endif HAS_EXCEPTION_STACKTRACE}
-System.IOUtils;
+     {$ifdef MSWindows}
+     Windows,
+     {$endif}
+     {$ifdef HAS_EXCEPTION_STACKTRACE}
+     JclDebug,
+     {$endif HAS_EXCEPTION_STACKTRACE}
+     System.IOUtils;
 
+type
+  TLogEntry = class
+  private
+    FLogString: string;
+    FIndent: string;
+    FThreadID: TThreadID;
+    FTimeStamp: TDateTime;
+    FLogType: TLogType;
+  end;
+
+  TLogEntryList = class(TObjectList<TLogEntry>)
+  end;
+
+  TLogCache = class
+  private
+    FEntryList: TLogEntryList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property EntryList: TLogEntryList read FEntryList;
+  end;
+
+var
+  GlobalLogCache: TLogCache;
 
 { TjachLog }
 
@@ -191,118 +235,132 @@ begin
   end;
 end;
 
-function PathBase: string;
-  {$if defined(debug) or defined(dbglog)}
-  const ThePathBase: string = 'c:\log';
-  {$endif}
+class procedure TjachLog.CacheClear;
 begin
-  {$if defined(debug) or defined(dbglog)}
-    Result := ThePathBase;
-  {$else}
-    Result := ExtractFilePath(ExpandFileName(ParamStr(0))) + PathDelim + 'log';
-  {$endif}
+  FCacheCS.Enter;
+  try
+    GlobalLogCache.FEntryList.Clear;
+  finally
+    FCacheCS.Leave;
+  end;
 end;
 
-{$ifdef MSWindows}
-function MyGetFileSize(const aFilename: String): Int64;
+class procedure TjachLog.CacheLog(ALogType: TLogType; const S: string);
 var
-  info: TWin32FileAttributeData;
+  Entry: TLogEntry;
 begin
-  result := -1;
-
-  if NOT GetFileAttributesEx(PWideChar(aFileName), GetFileExInfoStandard, @info) then
-    EXIT;
-
-  result := Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32);
+  Entry := TLogEntry.Create;
+  try
+    Entry.FTimeStamp := Now;
+    Entry.FIndent := FIndentSpaces;
+    Entry.FLogString := S;
+    Entry.FLogType := ALogType;
+    Entry.FThreadID := GetCurrentThreadId;
+    FCacheCS.Enter;
+    try
+      GlobalLogCache.EntryList.Add(Entry);
+    finally
+      FCacheCS.Leave;
+    end;
+  except
+    Entry.Free;
+  end;
 end;
-{$endif}
 
-class procedure TjachLog.RegisterDiskLoggerProc;
+class procedure TjachLog.CacheLogDebug(const S: string);
 begin
-  FRegisteredLoggers.Add(DiskLogger);
+  {$if defined(debug) or defined(dbglog)}
+  CacheLog(ltDebug, S);
+  {$endif}
+end;
+
+class procedure TjachLog.CacheLogDebug(const S: string;
+  const Args: array of const);
+begin
+  {$if defined(debug) or defined(dbglog)}
+  CacheLogDebug(Format(S, Args));
+  {$endif}
+end;
+
+class procedure TjachLog.CacheLogError(E: Exception; const S: string;
+  const Args: array of const);
+begin
+  CacheLogError(E, Format(S, Args));
+end;
+
+class procedure TjachLog.CacheLogError(E: Exception);
+begin
+  CacheLog(ltError, GetExceptionStr(E));
+end;
+
+class procedure TjachLog.CacheLogError(E: Exception; const ExtraMsg: string);
+begin
+  CacheLog(ltError, Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
+end;
+
+class procedure TjachLog.CacheLogError(const S: string);
+begin
+  CacheLog(ltError, S);
+end;
+
+class procedure TjachLog.CacheLogFatalError(E: Exception);
+begin
+  CacheLog(ltFatalError, GetExceptionStr(E));
+end;
+
+class procedure TjachLog.CacheLogFatalError(E: Exception; const S: string;
+  const Args: array of const);
+begin
+  CacheLogFatalError(E, Format(S, Args));
+end;
+
+class procedure TjachLog.CacheLogFatalError(E: Exception;
+  const ExtraMsg: string);
+begin
+  CacheLog(ltFatalError, Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
+end;
+
+class procedure TjachLog.CacheLogFatalError(const S: string);
+begin
+  CacheLog(ltFatalError, S);
+end;
+
+class procedure TjachLog.CacheLogInfo(const S: string);
+begin
+  CacheLog(ltInfo, S);
+end;
+
+class procedure TjachLog.CacheLogInfo(const S: string;
+  const Args: array of const);
+begin
+  CacheLog(ltInfo, Format(S, Args));
+end;
+
+class procedure TjachLog.CacheLogMessage(const S: string;
+  const Args: array of const);
+begin
+  CacheLog(ltMessage, Format(S, Args));
+end;
+
+class procedure TjachLog.CacheLogMessage(const S: string);
+begin
+  CacheLog(ltMessage, S);
+end;
+
+class procedure TjachLog.CacheLogWarn(const S: string);
+begin
+  CacheLog(ltWarn, S);
+end;
+
+class procedure TjachLog.CacheLogWarn(const S: string;
+  const Args: array of const);
+begin
+  CacheLog(ltWarn, Format(S, Args));
 end;
 
 class procedure TjachLog.DecIndent;
 begin
-  Delete(IndentSpaces, 1, 2);
-end;
-
-class procedure TjachLog.DiskLogger(ALogType: TLogType; const S: string);
-var
-  LogFileName: string;
-  Log: TextFile;
-  DT: string;
-  Margen: string;
-  Msgs: TStringDynArray;
-  I: Integer;
-  Retries: Integer;
-begin
-  if not IsActive then
-    Exit;
-  try
-    DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', Now)
-      , GetCurrentThreadID
-      , LogTypeToStr(ALogType)]);
-    Margen := StringOfChar(' ', Length(DT));
-    LogFileName := TPath.ChangeExtension(TPath.GetFileName(ParamStr(0)), '.log');
-    LogFileName := TPath.Combine(PathBase, LogFileName);
-    if FFileSuffix <> '' then
-      LogFileName := Copy(LogFileName, 1, Length(LogFileName) - 4) + FFileSuffix + '.log';
-    AssignFile(Log, LogFileName);
-    Msgs := WordWrap(S);
-    Retries := 0;
-    while true do
-    begin
-      if FCS.TryEnter then
-        try
-          if FileExists(LogFileName) then
-          begin
-            {$ifdef MSWindows}
-            if MyGetFileSize(LogFileName) >= MaxFileSize then
-            begin
-              RotateLogs(LogFileName);
-              ReWrite(Log);
-            end
-            else
-              Append(Log);
-            {$else}
-            Append(Log);
-            {$endif}
-          end
-          else begin
-            ForceDirectories(ExtractFilePath(LogFileName));
-            ReWrite(Log);
-          end;
-          try
-            Writeln(Log, DT + ' ' + GetIndentSpaces() + Msgs[0]);
-            if IsConsole then
-              Writeln(DT + ' ' + GetIndentSpaces() + Msgs[0]);
-            for I := 1 to High(Msgs) do
-            begin
-              Writeln(Log, Margen + ' ' + GetIndentSpaces() + Msgs[I]);
-              if IsConsole then
-                Writeln(Margen + ' ' + GetIndentSpaces() + Msgs[I]);
-            end;
-      //      Writeln(Log, '');
-          finally
-            CloseFile(Log);
-          end;
-          Exit;
-        finally
-          FCS.Leave;
-        end
-      else
-      begin
-        Inc(Retries);
-        if Retries = 10 then
-          Exit;
-        Sleep(10);
-      end;
-    end;
-  except
-    //no exceptions!
-    ;
-  end;
+  Delete(FIndentSpaces, 1, 2);
 end;
 
 class procedure TjachLog.ForceLog(Proc: TProc);
@@ -385,6 +443,19 @@ begin
   end;
 end;
 
+class procedure TjachLog.ForceWriteCachedLog;
+var
+  WasActive: Boolean;
+begin
+  WasActive := IsActive;
+  try
+    IsActive := True;
+    WriteCachedLog;
+  finally
+    IsActive := WasActive;
+  end;
+end;
+
 class procedure TjachLog.ForceLogMessage(const S: string);
 var
   WasActive: Boolean;
@@ -408,23 +479,33 @@ end;
 
 class function TjachLog.GetIndentSpaces: string;
 begin
-  Result := IndentSpaces;
+  Result := FIndentSpaces;
 end;
 
 class procedure TjachLog.IncIndent;
 begin
-  IndentSpaces := IndentSpaces + '  ';
+  FIndentSpaces := FIndentSpaces + '  ';
 end;
 
 class procedure TjachLog.Log(ALogType: TLogType; const S: string);
 var
-  LP: TLoggerProcedure;
+  Writer: TjachLogWriter;
 begin
   if not IsActive then
     Exit;
-  for LP in FRegisteredLoggers do
+  for Writer in FRegisteredLoggers do
     try
-      LP(ALogType, S);
+      Writer.Lock.Enter;
+      try
+        Writer.OpenLogChannel;
+        try
+          Writer.Write(ALogType, S, FIndentSpaces, GetCurrentThreadID, Now);
+        finally
+          Writer.CloseLogChannel;
+        end;
+      finally
+        Writer.Lock.Leave;
+      end;
     except
       ;
     end;
@@ -520,94 +601,88 @@ begin
   Log(ltWarn, Format(S, Args));
 end;
 
-class function TjachLog.RegisterLoggerProc(AProc: TLoggerProcedure): Integer;
+class procedure TjachLog.RegisterLogger(ALogger: TjachLogWriter);
 begin
-  Result := FRegisteredLoggers.Add(AProc);
+  FRegisteredLoggers.Add(ALogger);
 end;
 
-class procedure TjachLog.RegisterObjectLoggerProc(AProc: TLoggerProcedure;
-  AObject: TObject);
+class procedure TjachLog.WriteCachedLog;
 var
-  Ref: TObjectReferenceToLoggerProc;
+  SavedIndentSpaces: string;
+  LogEntry: TLogEntry;
+  Writer: TjachLogWriter;
 begin
-  Ref.AObject := AObject;
-  Ref.ALoggerProcIndex := RegisterLoggerProc(AProc);
-  FRegisteredObjects.Add(Ref);
-end;
-
-class procedure TjachLog.RotateLogs(LogFileName: string);
-var
-  Path, FN, Ext: string;
-
-  function CalcFileName(Idx: Integer): string;
+  if not IsActive then
   begin
-    Result := TPath.Combine(Path, FN + '.' + IntToStr(Idx) + Ext);
+    FCacheCS.Enter;
+    try
+      GlobalLogCache.EntryList.Clear;
+    finally
+      FCacheCS.Leave;
+    end;
+    Exit;
   end;
-
-var
-  FileNames: array[0..5] of string;
-  I: Integer;
-begin
-  Path := ExtractFilePath(LogFileName);
-  FN := ExtractFileName(LogFileName);
-  Ext := ExtractFileExt(LogFileName);
-  Delete(FN, Length(FN) - Length(Ext) + 1, Length(Ext));
-  FileNames[0] := LogFileName;
-  for I := Low(FileNames) + 1 to High(FileNames) do
-    FileNames[I] := CalcFileName(I);
-  if TFile.Exists(FileNames[High(FileNames)], False) then
-    TFile.Delete(FileNames[High(FileNames)]);
-  for I := High(FileNames) - 1 downto Low(FileNames) do
-    if TFile.Exists(FileNames[I]) then
-      TFile.Move(FileNames[I], FileNames[I + 1]);
-end;
-
-class procedure TjachLog.SetFileSuffix(AFileSuffix: string);
-begin
-  FFileSuffix := AFileSuffix;
-end;
-
-class procedure TjachLog.UnregisterObjectLoggerProc(AObject: TObject);
-  procedure UpdateIndex(IndexToDelete: Integer);
-  var
-    Ref: TObjectReferenceToLoggerProc;
-    I: Integer;
-  begin
-    for I := 0 to FRegisteredObjects.Count - 1 do
-    begin
-      Ref := FRegisteredObjects[I];
-      if Ref.ALoggerProcIndex > IndexToDelete then
+  SavedIndentSpaces := FIndentSpaces;
+  try
+    FIndentSpaces := '';
+    LogMessage('Cached LOG Write BEGIN ********************');
+    try
+      FCacheCS.Enter;
+      try
+        for Writer in FRegisteredLoggers do
+          try
+            Writer.OpenLogChannel;
+            try
+              for LogEntry in GlobalLogCache.EntryList do
+                Writer.Write(LogEntry.FLogType, LogEntry.FLogString, LogEntry.FIndent, LogEntry.FThreadID, LogEntry.FTimeStamp);
+            finally
+              Writer.CloseLogChannel;
+            end;
+          except
+            ;
+          end;
+      finally
+        FCacheCS.Leave;
+      end;
+      LogMessage('Cached LOG Write END **********************');
+    except
+      on E:Exception do
       begin
-        Ref.ALoggerProcIndex := Ref.ALoggerProcIndex - 1;
-        FRegisteredObjects[I] := Ref;
+        FIndentSpaces := '';
+        LogError(E, 'Cached LOG Write Error');
       end;
     end;
-  end;
-var
-  I: Integer;
-begin
-  for I := FRegisteredObjects.Count - 1 downto 0 do
-  begin
-    if FRegisteredObjects[I].AObject = AObject then
-    begin
-      FRegisteredLoggers.Delete(FRegisteredObjects[I].ALoggerProcIndex);
-      UpdateIndex(FRegisteredObjects[I].ALoggerProcIndex);
-      FRegisteredObjects.Delete(I);
-    end;
+  finally
+    FIndentSpaces := SavedIndentSpaces;
+    GlobalLogCache.EntryList.Clear;
   end;
 end;
 
-initialization
-  TjachLog.MaxFileSize := 20 * 1024 * 1024; //20MB
-  TjachLog.FCS := TCriticalSection.Create;
-  TjachLog.FRegisteredLoggers := TList<TLoggerProcedure>.Create();
-  TjachLog.FRegisteredObjects := TList<TObjectReferenceToLoggerProc>.Create();
+{ TLogCache }
 
-  {$ifdef AutoRegisterDiskLogger}
-  TjachLog.RegisterDiskLoggerProc;
-  {$endif}
+constructor TLogCache.Create;
+begin
+  inherited Create;
+  FEntryList := TLogEntryList.Create(True);
+end;
+
+destructor TLogCache.Destroy;
+begin
+  FEntryList.Free;
+  inherited;
+end;
+
+{ TDiskLogger }
+
+initialization
+  TjachLog.FCS := TCriticalSection.Create;
+  TjachLog.FCacheCS := TCriticalSection.Create;
+  TjachLog.FRegisteredLoggers := TObjectList<TjachLogWriter>.Create();
+
+  GlobalLogCache := TLogCache.Create;
 finalization
   TjachLog.FCS.Free;
+  TjachLog.FCacheCS.Free;
   TjachLog.FRegisteredLoggers.Free;
-  TjachLog.FRegisteredObjects.Free;
+  GlobalLogCache.Free;
 end.

@@ -3,7 +3,8 @@ program LogGUIDemo;
 uses
   Vcl.Forms,
   ufrmMain in 'ufrmMain.pas' {Form3},
-  UjachLogMgr in '..\..\src\UjachLogMgr.pas';
+  UjachLogMgr in '..\..\src\UjachLogMgr.pas',
+  ujachLogToDisk in '..\..\src\ujachLogToDisk.pas';
 
 {$R *.res}
 

@@ -2,7 +2,7 @@ object Form3: TForm3
   Left = 0
   Top = 0
   Caption = 'Form3'
-  ClientHeight = 201
+  ClientHeight = 360
   ClientWidth = 447
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -57,5 +57,77 @@ object Form3: TForm3
     Caption = 'Write FatalError'
     TabOrder = 4
     OnClick = Button5Click
+  end
+  object Button6: TButton
+    Left = 248
+    Top = 8
+    Width = 125
+    Height = 25
+    Caption = 'Clear cache'
+    TabOrder = 5
+    OnClick = Button6Click
+  end
+  object Button7: TButton
+    Left = 248
+    Top = 39
+    Width = 125
+    Height = 25
+    Caption = 'Cache write Msg'
+    TabOrder = 6
+    OnClick = Button7Click
+  end
+  object Button8: TButton
+    Left = 248
+    Top = 70
+    Width = 125
+    Height = 25
+    Caption = 'Cache write Warn'
+    TabOrder = 7
+    OnClick = Button8Click
+  end
+  object Button9: TButton
+    Left = 248
+    Top = 101
+    Width = 125
+    Height = 25
+    Caption = 'Cache write Error'
+    TabOrder = 8
+    OnClick = Button9Click
+  end
+  object Button10: TButton
+    Left = 248
+    Top = 132
+    Width = 125
+    Height = 25
+    Caption = 'Cache write Fatal Error'
+    TabOrder = 9
+    OnClick = Button10Click
+  end
+  object Button11: TButton
+    Left = 248
+    Top = 163
+    Width = 125
+    Height = 25
+    Caption = 'Write cache'
+    TabOrder = 10
+    OnClick = Button11Click
+  end
+  object Button12: TButton
+    Left = 248
+    Top = 194
+    Width = 125
+    Height = 25
+    Caption = 'Force write cache'
+    TabOrder = 11
+    OnClick = Button12Click
+  end
+  object Button13: TButton
+    Left = 248
+    Top = 225
+    Width = 125
+    Height = 25
+    Caption = 'Cache 1000 messages'
+    TabOrder = 12
+    OnClick = Button13Click
   end
 end

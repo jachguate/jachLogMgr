@@ -107,6 +107,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\src\UjachLogMgr.pas"/>
+        <DCCReference Include="..\..\src\ujachLogToDisk.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
