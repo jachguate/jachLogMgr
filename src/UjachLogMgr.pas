@@ -74,11 +74,15 @@ type
     procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); inline;
   private
     procedure SetIsCached(const Value: Boolean);
+    function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
+    procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll; ADefaultTopic: TjachLogTopicIndex = 0);
     destructor Destroy; override;
 
     property IsCached: Boolean read FIsCached write SetIsCached;
+    property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
+    property DefaultTopic: TjachLogTopicIndex read FDefaultTopic write FDefaultTopic;
 
     procedure IncIndent;
     procedure DecIndent;
@@ -109,89 +113,89 @@ type
     procedure LogEmergency(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogEmergency(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogAlert(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogAlert(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogAlert(const S: string); overload;
+    procedure LogAlert(const S: string); overload; inline;
     procedure LogAlert(const S: string; const Args: array of const); overload;
     procedure LogAlert(E: Exception); overload; inline;
     procedure LogAlert(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogAlert(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogCritical(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogCritical(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogCritical(const S: string); overload;
+    procedure LogCritical(const S: string); overload; inline;
     procedure LogCritical(const S: string; const Args: array of const); overload;
     procedure LogCritical(E: Exception); overload; inline;
     procedure LogCritical(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogCritical(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogError(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogError(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogError(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogError(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogError(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogError(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogError(const S: string); overload;
+    procedure LogError(const S: string); overload; inline;
     procedure LogError(const S: string; const Args: array of const); overload;
     procedure LogError(E: Exception); overload; inline;
     procedure LogError(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogError(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogWarning(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogWarning(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogWarning(const S: string); overload;
+    procedure LogWarning(const S: string); overload; inline;
     procedure LogWarning(const S: string; const Args: array of const); overload;
     procedure LogWarning(E: Exception); overload; inline;
     procedure LogWarning(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogWarning(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogNotice(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogNotice(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogNotice(const S: string); overload;
+    procedure LogNotice(const S: string); overload; inline;
     procedure LogNotice(const S: string; const Args: array of const); overload;
     procedure LogNotice(E: Exception); overload; inline;
     procedure LogNotice(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogNotice(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogInfo(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogInfo(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogInfo(const S: string); overload;
+    procedure LogInfo(const S: string); overload; inline;
     procedure LogInfo(const S: string; const Args: array of const); overload;
     procedure LogInfo(E: Exception); overload; inline;
     procedure LogInfo(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogInfo(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogDebug(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogDebug(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogDebug(const S: string); overload;
+    procedure LogDebug(const S: string); overload; inline;
     procedure LogDebug(const S: string; const Args: array of const); overload;
     procedure LogDebug(E: Exception); overload; inline;
     procedure LogDebug(const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogDebug(const S: string; const Args: array of const; E: Exception); overload;
 
-    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogDebugVerbose(const S: string); overload;
+    procedure LogDebugVerbose(const S: string); overload; inline;
     procedure LogDebugVerbose(const S: string; const Args: array of const); overload;
     procedure LogDebugVerbose(E: Exception); overload; inline;
     procedure LogDebugVerbose(const ExtraMsg: string; E: Exception); overload; inline;
@@ -282,6 +286,11 @@ end;
 function TjachLog.GetIndentSpaces: string;
 begin
   Result := FIndentSpaces;
+end;
+
+function TjachLog.GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
+begin
+  Result := FLogLevel[Index];
 end;
 
 procedure TjachLog.IncIndent;
@@ -865,6 +874,12 @@ procedure TjachLog.SetIsCached(const Value: Boolean);
 begin
   if FIsCached <> Value then
     FIsCached := Value;
+end;
+
+procedure TjachLog.SetLogLevel(Index: TjachLogTopicIndex;
+  const Value: TLogLevel);
+begin
+  FLogLevel[Index] := Value;
 end;
 
 procedure TjachLog.WriteCachedLog;

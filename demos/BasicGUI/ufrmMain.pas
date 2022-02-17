@@ -21,19 +21,13 @@ type
     Button11: TButton;
     Button12: TButton;
     Button13: TButton;
-    procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
-    procedure Button7Click(Sender: TObject);
-    procedure Button8Click(Sender: TObject);
-    procedure Button9Click(Sender: TObject);
-    procedure Button10Click(Sender: TObject);
-    procedure Button11Click(Sender: TObject);
-    procedure Button12Click(Sender: TObject);
     procedure Button13Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
   public
   end;
@@ -44,37 +38,20 @@ var
 implementation
 
 uses
-  UjachLogMgr;
+  UjachLogMgr, ujachLogAuto, ujachLogClasses;
 
 
 {$R *.dfm}
-
-procedure TForm3.Button10Click(Sender: TObject);
-begin
-  TjachLog.CacheLogFatalError('This is a fatal error');
-end;
-
-procedure TForm3.Button11Click(Sender: TObject);
-begin
-  TjachLog.WriteCachedLog;
-end;
-
-procedure TForm3.Button12Click(Sender: TObject);
-begin
-  TjachLog.ForceWriteCachedLog;
-end;
 
 procedure TForm3.Button13Click(Sender: TObject);
 var
   I: Integer;
 begin
-  for I := 1 to 1000 do
-    TjachLog.CacheLogMessage('Logged message #%d', [I]);
 end;
 
 procedure TForm3.Button1Click(Sender: TObject);
 begin
-  TjachLog.IsActive := not TjachLog.IsActive;
+  ShowMessage('SizeOf(TLogSeverity)=' + IntToStr(SizeOf(TLogSeverity)));
 end;
 
 procedure TForm3.Button2Click(Sender: TObject);
@@ -82,7 +59,7 @@ var
   I: Integer;
 begin
   //TjachLog.MaxFileSize := 50 * 1024;
-  TjachLog.LogMessage('Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola '
+  jachLog.LogInfo('Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola '
     + 'Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola '
     + 'Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola '
     + 'Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola '
@@ -96,12 +73,12 @@ begin
     + 'Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola Hola '
   );
   for I := 1 to 10 do
-    TjachLog.LogMessage('Iteración %d', [I]);
+    jachLog.LogInfo('Iteración %d', [I]);
 end;
 
 procedure TForm3.Button3Click(Sender: TObject);
 begin
-  TjachLog.LogWarn('Advertencia');
+  jachLog.LogWarning('Advertencia');
 end;
 
 procedure TForm3.Button4Click(Sender: TObject);
@@ -111,7 +88,7 @@ begin
   except
     on E:Exception do
     begin
-      TjachLog.LogError(E, 'Error al ejecutar proceso');
+      jachLog.LogError('Error al ejecutar proceso', E);
       raise;
     end;
   end;
@@ -120,27 +97,12 @@ end;
 
 procedure TForm3.Button5Click(Sender: TObject);
 begin
-  TjachLog.LogFatalError('Error que jode todo');
+  jachLog.LogCritical('Error que jode todo');
 end;
 
 procedure TForm3.Button6Click(Sender: TObject);
 begin
-  TjachLog.CacheClear;
-end;
-
-procedure TForm3.Button7Click(Sender: TObject);
-begin
-  TjachLog.CacheLogMessage('This is a message');
-end;
-
-procedure TForm3.Button8Click(Sender: TObject);
-begin
-  TjachLog.CacheLogWarn('This is a warning');
-end;
-
-procedure TForm3.Button9Click(Sender: TObject);
-begin
-  TjachLog.CacheLogError('This is an error');
+  jachLog.CacheClear;
 end;
 
 end.

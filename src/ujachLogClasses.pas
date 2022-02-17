@@ -34,7 +34,7 @@ type
   protected
     const
       WWMAX_LEN = 255;
-    function WordWrap(const S: string; MaxLen: Integer = WWMAX_LEN): TStringDynArray; virtual;
+    function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
   public
     procedure OpenLogChannel; virtual; abstract;
     procedure CloseLogChannel; virtual; abstract;
@@ -95,7 +95,7 @@ end;
 { TjachLogWriter }
 
 function TjachLogWriter.WordWrap(const S: string;
-  MaxLen: Integer): TStringDynArray;
+  MaxLen: UInt16): TStringDynArray;
 const
   CR = #13;
   LF = #10;

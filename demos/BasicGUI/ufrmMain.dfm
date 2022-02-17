@@ -74,7 +74,6 @@ object Form3: TForm3
     Height = 25
     Caption = 'Cache write Msg'
     TabOrder = 6
-    OnClick = Button7Click
   end
   object Button8: TButton
     Left = 248
@@ -83,7 +82,6 @@ object Form3: TForm3
     Height = 25
     Caption = 'Cache write Warn'
     TabOrder = 7
-    OnClick = Button8Click
   end
   object Button9: TButton
     Left = 248
@@ -92,7 +90,6 @@ object Form3: TForm3
     Height = 25
     Caption = 'Cache write Error'
     TabOrder = 8
-    OnClick = Button9Click
   end
   object Button10: TButton
     Left = 248
@@ -101,7 +98,6 @@ object Form3: TForm3
     Height = 25
     Caption = 'Cache write Fatal Error'
     TabOrder = 9
-    OnClick = Button10Click
   end
   object Button11: TButton
     Left = 248
@@ -110,7 +106,6 @@ object Form3: TForm3
     Height = 25
     Caption = 'Write cache'
     TabOrder = 10
-    OnClick = Button11Click
   end
   object Button12: TButton
     Left = 248
@@ -119,7 +114,6 @@ object Form3: TForm3
     Height = 25
     Caption = 'Force write cache'
     TabOrder = 11
-    OnClick = Button12Click
   end
   object Button13: TButton
     Left = 248

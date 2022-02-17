@@ -1,10 +1,8 @@
-program LogGUIDemo;
+program LevelFilterDemo;
 
 uses
   Vcl.Forms,
-  ufrmMain in 'ufrmMain.pas' {Form3},
-  UjachLogMgr in '..\..\src\UjachLogMgr.pas',
-  ujachLogToDisk in '..\..\src\ujachLogToDisk.pas';
+  Unit3 in 'Unit3.pas' {Form3};
 
 {$R *.res}
 
