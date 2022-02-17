@@ -27,7 +27,7 @@ object Form3: TForm3
   object lblPath: TLabel
     Left = 8
     Top = 5
-    Width = 334
+    Width = 32
     Height = 13
     Anchors = [akLeft, akTop, akRight]
     Caption = 'lblPath'
