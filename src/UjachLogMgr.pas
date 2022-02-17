@@ -77,7 +77,7 @@ type
     function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
     procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
   public
-    constructor Create(ADefaultTopicLevel: TLogLevel = llAll; ADefaultTopic: TjachLogTopicIndex = 0);
+    constructor Create(ADefaultTopicLevel: TLogLevel = llInfo; ADefaultTopic: TjachLogTopicIndex = 0);
     destructor Destroy; override;
 
     property IsCached: Boolean read FIsCached write SetIsCached;
@@ -244,7 +244,7 @@ begin
   end;
 end;
 
-constructor TjachLog.Create(ADefaultTopicLevel: TLogLevel = llAll; ADefaultTopic: TjachLogTopicIndex = 0);
+constructor TjachLog.Create(ADefaultTopicLevel: TLogLevel = llInfo; ADefaultTopic: TjachLogTopicIndex = 0);
 var
   I: Integer;
 begin
