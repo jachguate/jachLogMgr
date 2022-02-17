@@ -1,6 +1,6 @@
 { ******************************************************** }
 { **                                                    ** }
-{ ** Basic multithreaded Log support for Delphi         ** }
+{ ** Basic multithreaded Log for Delphi                 ** }
 { **                                                    ** }
 { ** Author:                                            ** }
 { **     Juan Antonio Castillo H. (jachguate)           ** }
@@ -35,99 +35,171 @@ SOFTWARE.
 unit UjachLogMgr;
 
 interface
-uses Classes, SysUtils, System.Types, SyncObjs, System.Generics.Collections;
+uses Classes, SysUtils, System.Types, SyncObjs, System.Generics.Collections,
+  ujachLogClasses;
+
+{
+  JACHLOG_LEVEL_
+SysLog
+Severity: emergency, critical, alert, error, warning, debug, informational, and notice.
+
+FATAL, ERROR, WARN, INFO, DEBUG, TRACE, ALL, and OFF
+
+ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF.
+
+
+  FATAL       emergency, critical
+, ERROR       error,
+, WARN        warning,
+, INFO
+, DEBUG       debug,
+, TRACE       informational, ???
+
+, alert, and notice.
+}
 
 type
-  TLogType = (ltDebug, ltInfo, ltMessage, ltWarn, ltError, ltFatalError);
-
-  TjachLogWriter = class
-  protected
-    procedure OpenLogChannel; virtual; abstract;
-    procedure CloseLogChannel; virtual; abstract;
-    procedure Write(ALogType: TLogType; const S, AIndentSpaces: string;
-      const AThreadID: TThreadID; const ADateTime: TDateTime); virtual; abstract;
-    function GetLock: TCriticalSection; virtual; abstract;
-  public
-    property Lock: TCriticalSection read GetLock;
-  end;
-
-
-  TjachLog = record
+  TjachLog = class
+  strict private
+    FCS: TCriticalSection;
+    FRegisteredLoggers: TObjectList<TjachLogWriter>;
+    FIndentSpaces: string;
+    FCacheCS: TCriticalSection;
+    FIsActive: Boolean;
+    FDefaultTopic: TjachLogTopicIndex;
+    FIsCached: Boolean;
+    FLogLevel: array[TjachLogTopicIndex] of TLogLevel;
+    FCache: TLogCache;
+    function GetExceptionStr(E: Exception): string;
+    procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); inline;
   private
-    class var FCS: TCriticalSection;
-    class var FRegisteredLoggers: TObjectList<TjachLogWriter>;
-    class var FIndentSpaces: string;
-    class var FCacheCS: TCriticalSection;
-    class function GetExceptionStr(E: Exception): string; static;
+    procedure SetIsCached(const Value: Boolean);
   public
-    class var IsActive: Boolean;
-    class procedure IncIndent; static;
-    class procedure DecIndent; static;
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll; ADefaultTopic: TjachLogTopicIndex = 0);
+    destructor Destroy; override;
 
-    class procedure RegisterLogger(ALogger: TjachLogWriter); static;
-    class function GetIndentSpaces: string; static; inline;
+    property IsCached: Boolean read FIsCached write SetIsCached;
 
-    class procedure Log(ALogType: TLogType; const S: string); static;
+    procedure IncIndent;
+    procedure DecIndent;
 
-    class procedure LogDebug(const S: string); overload; static;
-    class procedure LogDebug(const S: string; const Args: array of const); overload; static;
-    class procedure LogInfo(const S: string); overload; static;
-    class procedure LogInfo(const S: string; const Args: array of const); overload; static;
-    class procedure LogMessage(const S: string); overload; static;
-    class procedure LogMessage(const S: string; const Args: array of const); overload; static;
-    class procedure LogWarn(const S: string); overload; static;
-    class procedure LogWarn(const S: string; const Args: array of const); overload; static;
+    procedure RegisterLogWriter(ALogger: TjachLogWriter);
+    function GetIndentSpaces: string; inline;
 
-    class procedure LogError(const S: string); overload; static;
-    class procedure LogError(E: Exception; const ExtraMsg: string); overload; static;
-    class procedure LogError(E: Exception; const S: string; const Args: array of const); overload; static;
-    class procedure LogError(E: Exception); overload; static;
+    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); overload;
+    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string; const Args: array of const); overload;
+    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; E: Exception); overload; inline;
+    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure LogFatalError(const S: string); overload; static;
-    class procedure LogFatalError(E: Exception; const ExtraMsg: string); overload; static;
-    class procedure LogFatalError(E: Exception; const S: string; const Args: array of const); overload; static;
-    class procedure LogFatalError(E: Exception); overload; static;
+    procedure Log(ALogSeverity: TLogSeverity; const S: string); overload; inline;
+    procedure Log(ALogSeverity: TLogSeverity; const S: string; const Args: array of const); overload;
+    procedure Log(ALogSeverity: TLogSeverity; E: Exception); overload; inline;
+    procedure Log(ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure Log(ALogSeverity: TLogSeverity; const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure CacheLog(ALogType: TLogType; const S: string); static;
+    procedure LogEmergency(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
+    procedure LogEmergency(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogEmergency(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogEmergency(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogEmergency(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogEmergency(const S: string); overload; inline;
+    procedure LogEmergency(const S: string; const Args: array of const); overload;
+    procedure LogEmergency(E: Exception); overload; inline;
+    procedure LogEmergency(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogEmergency(const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure CacheLogDebug(const S: string); overload; static;
-    class procedure CacheLogDebug(const S: string; const Args: array of const); overload; static;
-    class procedure CacheLogInfo(const S: string); overload; static;
-    class procedure CacheLogInfo(const S: string; const Args: array of const); overload; static;
-    class procedure CacheLogMessage(const S: string); overload; static;
-    class procedure CacheLogMessage(const S: string; const Args: array of const); overload; static;
-    class procedure CacheLogWarn(const S: string); overload; static;
-    class procedure CacheLogWarn(const S: string; const Args: array of const); overload; static;
+    procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogAlert(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogAlert(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogAlert(const S: string); overload;
+    procedure LogAlert(const S: string; const Args: array of const); overload;
+    procedure LogAlert(E: Exception); overload; inline;
+    procedure LogAlert(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogAlert(const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure CacheLogError(const S: string); overload; static;
-    class procedure CacheLogError(E: Exception; const ExtraMsg: string); overload; static;
-    class procedure CacheLogError(E: Exception; const S: string; const Args: array of const); overload; static;
-    class procedure CacheLogError(E: Exception); overload; static;
+    procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogCritical(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogCritical(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogCritical(const S: string); overload;
+    procedure LogCritical(const S: string; const Args: array of const); overload;
+    procedure LogCritical(E: Exception); overload; inline;
+    procedure LogCritical(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogCritical(const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure CacheLogFatalError(const S: string); overload; static;
-    class procedure CacheLogFatalError(E: Exception; const ExtraMsg: string); overload; static;
-    class procedure CacheLogFatalError(E: Exception; const S: string; const Args: array of const); overload; static;
-    class procedure CacheLogFatalError(E: Exception); overload; static;
+    procedure LogError(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogError(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogError(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogError(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogError(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogError(const S: string); overload;
+    procedure LogError(const S: string; const Args: array of const); overload;
+    procedure LogError(E: Exception); overload; inline;
+    procedure LogError(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogError(const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure CacheClear; static;
-    class procedure WriteCachedLog; static;
-    class procedure ForceWriteCachedLog; static;
+    procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogWarning(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogWarning(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogWarning(const S: string); overload;
+    procedure LogWarning(const S: string; const Args: array of const); overload;
+    procedure LogWarning(E: Exception); overload; inline;
+    procedure LogWarning(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogWarning(const S: string; const Args: array of const; E: Exception); overload;
 
-    class procedure ForceLog(Proc: TProc); static;
-    class procedure ForceLogMessage(const S: string); overload; static;
-    class procedure ForceLogMessage(const S: string; const Args: array of const); overload; static;
-    class procedure ForceLogError(const S: string); overload; static;
-    class procedure ForceLogError(E: Exception); overload; static;
-    class procedure ForceLogError(E: Exception; const ExtraMsg: string); overload; static;
-    class procedure ForceLogError(E: Exception; const S: string; const Args: array of const); overload; static;
+    procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogNotice(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogNotice(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogNotice(const S: string); overload;
+    procedure LogNotice(const S: string; const Args: array of const); overload;
+    procedure LogNotice(E: Exception); overload; inline;
+    procedure LogNotice(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogNotice(const S: string; const Args: array of const; E: Exception); overload;
+
+    procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogInfo(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogInfo(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogInfo(const S: string); overload;
+    procedure LogInfo(const S: string; const Args: array of const); overload;
+    procedure LogInfo(E: Exception); overload; inline;
+    procedure LogInfo(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogInfo(const S: string; const Args: array of const; E: Exception); overload;
+
+    procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogDebug(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogDebug(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogDebug(const S: string); overload;
+    procedure LogDebug(const S: string; const Args: array of const); overload;
+    procedure LogDebug(E: Exception); overload; inline;
+    procedure LogDebug(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogDebug(const S: string; const Args: array of const; E: Exception); overload;
+
+    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string); overload;
+    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
+    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
+    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
+    procedure LogDebugVerbose(const S: string); overload;
+    procedure LogDebugVerbose(const S: string; const Args: array of const); overload;
+    procedure LogDebugVerbose(E: Exception); overload; inline;
+    procedure LogDebugVerbose(const ExtraMsg: string; E: Exception); overload; inline;
+    procedure LogDebugVerbose(const S: string; const Args: array of const; E: Exception); overload;
+
+    procedure CacheClear;
+    procedure WriteCachedLog;
   end;
-
-function LogTypeToStr(ALogType: TLogType): string;
-
-const
-  WWMAX_LEN = 255;
-
-  function WordWrap(const S: string; MaxLen: Integer = WWMAX_LEN): TStringDynArray;
 
 implementation
 uses StrUtils,
@@ -139,126 +211,27 @@ uses StrUtils,
      {$endif HAS_EXCEPTION_STACKTRACE}
      System.IOUtils;
 
-type
-  TLogEntry = class
-  private
-    FLogString: string;
-    FIndent: string;
-    FThreadID: TThreadID;
-    FTimeStamp: TDateTime;
-    FLogType: TLogType;
-  end;
-
-  TLogEntryList = class(TObjectList<TLogEntry>)
-  end;
-
-  TLogCache = class
-  private
-    FEntryList: TLogEntryList;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    property EntryList: TLogEntryList read FEntryList;
-  end;
-
-var
-  GlobalLogCache: TLogCache;
-
 { TjachLog }
 
-function WordWrap(const S: string; MaxLen: Integer = WWMAX_LEN): TStringDynArray;
-const
-  CR = #13;
-  LF = #10;
-var
-  Start, Idx, PosSpace, CharsToIgnore: Integer;
-  CrLf: string;
-begin
-  CrLf := CR + LF;
-  SetLength(Result, 1);
-  if     (Length(S) <= MaxLen)
-     and (Pos(CrLf, S) = 0)
-     and (Pos(CR, S) = 0)
-     and (Pos(LF, S) = 0) then
-    Result[0] := S
-  else begin
-    Start := 1;
-    Idx := 0;
-    repeat
-      CharsToIgnore := 0;
-      SetLength(Result, Idx + 1);
-      Result[Idx] := Copy(S, Start, MaxLen);
-      if (Start + Length(Result[Idx])) < Length(S) then
-      begin
-        PosSpace := LastDelimiter(' ', Result[Idx]);
-        if PosSpace > 0 then
-        begin
-          Delete(Result[Idx], PosSpace, MaxInt);
-          CharsToIgnore := 1;
-        end;
-      end;
-      PosSpace := Pos(CRLF, Result[Idx]);
-      if PosSpace > 0 then
-      begin
-        Delete(Result[Idx], PosSpace, MaxInt);
-        CharsToIgnore := 2;
-      end;
-
-      PosSpace := Pos(CR, Result[Idx]);
-      if PosSpace > 0 then
-      begin
-        Delete(Result[Idx], PosSpace, MaxInt);
-        CharsToIgnore := 1;
-      end;
-      PosSpace := Pos(LF, Result[Idx]);
-      if PosSpace > 0 then
-      begin
-        Delete(Result[Idx], PosSpace, MaxInt);
-        CharsToIgnore := 1;
-      end;
-
-      Start := Start + Length(Result[Idx]) + CharsToIgnore;
-      Inc(Idx);
-    until Start >= Length(S);
-  end;
-end;
-
-function LogTypeToStr(ALogType: TLogType): string;
-begin
-  case ALogType of
-    ltDebug: Result := 'Dbg';
-    ltInfo: Result := 'Info';
-    ltMessage: Result := 'Msg';
-    ltWarn: Result := 'Warn';
-    ltError: Result := 'Err';
-    ltFatalError: Result := 'Fatal';
-  end;
-end;
-
-class procedure TjachLog.CacheClear;
+procedure TjachLog.CacheClear;
 begin
   FCacheCS.Enter;
   try
-    GlobalLogCache.FEntryList.Clear;
+    FCache.EntryList.Clear;
   finally
     FCacheCS.Leave;
   end;
 end;
 
-class procedure TjachLog.CacheLog(ALogType: TLogType; const S: string);
+procedure TjachLog.CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string);
 var
   Entry: TLogEntry;
 begin
-  Entry := TLogEntry.Create;
+  Entry := TLogEntry.Create(ATopic, ALogSeverity, FIndentSpaces, S);
   try
-    Entry.FTimeStamp := Now;
-    Entry.FIndent := FIndentSpaces;
-    Entry.FLogString := S;
-    Entry.FLogType := ALogType;
-    Entry.FThreadID := GetCurrentThreadId;
     FCacheCS.Enter;
     try
-      GlobalLogCache.EntryList.Add(Entry);
+      FCache.EntryList.Add(Entry);
     finally
       FCacheCS.Leave;
     end;
@@ -267,209 +240,38 @@ begin
   end;
 end;
 
-class procedure TjachLog.CacheLogDebug(const S: string);
+constructor TjachLog.Create(ADefaultTopicLevel: TLogLevel = llAll; ADefaultTopic: TjachLogTopicIndex = 0);
+var
+  I: Integer;
 begin
-  {$if defined(debug) or defined(dbglog)}
-  CacheLog(ltDebug, S);
-  {$endif}
+  inherited Create;
+  FCS := TCriticalSection.Create;
+  FRegisteredLoggers := TObjectList<TjachLogWriter>.Create(True);
+  FCacheCS := TCriticalSection.Create;
+  FIsActive := True;
+  FDefaultTopic := ADefaultTopic;
+  FIsCached := False;
+  FCache := TLogCache.Create;
+  for I := Low(FLogLevel) to High(FLogLevel) do
+    FLogLevel[I] := ADefaultTopicLevel;
 end;
 
-class procedure TjachLog.CacheLogDebug(const S: string;
-  const Args: array of const);
-begin
-  {$if defined(debug) or defined(dbglog)}
-  CacheLogDebug(Format(S, Args));
-  {$endif}
-end;
-
-class procedure TjachLog.CacheLogError(E: Exception; const S: string;
-  const Args: array of const);
-begin
-  CacheLogError(E, Format(S, Args));
-end;
-
-class procedure TjachLog.CacheLogError(E: Exception);
-begin
-  CacheLog(ltError, GetExceptionStr(E));
-end;
-
-class procedure TjachLog.CacheLogError(E: Exception; const ExtraMsg: string);
-begin
-  CacheLog(ltError, Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
-end;
-
-class procedure TjachLog.CacheLogError(const S: string);
-begin
-  CacheLog(ltError, S);
-end;
-
-class procedure TjachLog.CacheLogFatalError(E: Exception);
-begin
-  CacheLog(ltFatalError, GetExceptionStr(E));
-end;
-
-class procedure TjachLog.CacheLogFatalError(E: Exception; const S: string;
-  const Args: array of const);
-begin
-  CacheLogFatalError(E, Format(S, Args));
-end;
-
-class procedure TjachLog.CacheLogFatalError(E: Exception;
-  const ExtraMsg: string);
-begin
-  CacheLog(ltFatalError, Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
-end;
-
-class procedure TjachLog.CacheLogFatalError(const S: string);
-begin
-  CacheLog(ltFatalError, S);
-end;
-
-class procedure TjachLog.CacheLogInfo(const S: string);
-begin
-  CacheLog(ltInfo, S);
-end;
-
-class procedure TjachLog.CacheLogInfo(const S: string;
-  const Args: array of const);
-begin
-  CacheLog(ltInfo, Format(S, Args));
-end;
-
-class procedure TjachLog.CacheLogMessage(const S: string;
-  const Args: array of const);
-begin
-  CacheLog(ltMessage, Format(S, Args));
-end;
-
-class procedure TjachLog.CacheLogMessage(const S: string);
-begin
-  CacheLog(ltMessage, S);
-end;
-
-class procedure TjachLog.CacheLogWarn(const S: string);
-begin
-  CacheLog(ltWarn, S);
-end;
-
-class procedure TjachLog.CacheLogWarn(const S: string;
-  const Args: array of const);
-begin
-  CacheLog(ltWarn, Format(S, Args));
-end;
-
-class procedure TjachLog.DecIndent;
+procedure TjachLog.DecIndent;
 begin
   Delete(FIndentSpaces, 1, 2);
 end;
 
-class procedure TjachLog.ForceLog(Proc: TProc);
-var
-  WasActive: Boolean;
+destructor TjachLog.Destroy;
 begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    Proc();
-  finally
-    IsActive := WasActive;
-  end;
+  FIsActive := False;
+  FCacheCS.Free;
+  FCS.Free;
+  FRegisteredLoggers.Free;
+  FCache.Free;
+  inherited;
 end;
 
-class procedure TjachLog.ForceLogError(const S: string);
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    LogError(S);
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class procedure TjachLog.ForceLogError(E: Exception);
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    LogError(E);
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class procedure TjachLog.ForceLogError(E: Exception; const ExtraMsg: string);
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    LogError(E, ExtraMsg);
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class procedure TjachLog.ForceLogError(E: Exception; const S: string;
-  const Args: array of const);
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    LogError(E, S, Args);
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class procedure TjachLog.ForceLogMessage(const S: string;
-  const Args: array of const);
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    LogMessage(S, Args);
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class procedure TjachLog.ForceWriteCachedLog;
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    WriteCachedLog;
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class procedure TjachLog.ForceLogMessage(const S: string);
-var
-  WasActive: Boolean;
-begin
-  WasActive := IsActive;
-  try
-    IsActive := True;
-    LogMessage(S);
-  finally
-    IsActive := WasActive;
-  end;
-end;
-
-class function TjachLog.GetExceptionStr(E: Exception): string;
+function TjachLog.GetExceptionStr(E: Exception): string;
 begin
   Result := Format('%s'#13'%s', [E.ClassName, E.Message]);
   {$ifdef HAS_EXCEPTION_STACKTRACE}
@@ -477,146 +279,605 @@ begin
   {$endif HAS_EXCEPTION_STACKTRACE}
 end;
 
-class function TjachLog.GetIndentSpaces: string;
+function TjachLog.GetIndentSpaces: string;
 begin
   Result := FIndentSpaces;
 end;
 
-class procedure TjachLog.IncIndent;
+procedure TjachLog.IncIndent;
 begin
   FIndentSpaces := FIndentSpaces + '  ';
 end;
 
-class procedure TjachLog.Log(ALogType: TLogType; const S: string);
+procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string);
 var
   Writer: TjachLogWriter;
 begin
-  if not IsActive then
+  if not FIsActive then
     Exit;
-  for Writer in FRegisteredLoggers do
-    try
-      Writer.Lock.Enter;
-      try
-        Writer.OpenLogChannel;
+
+  if Byte(FLogLevel[ATopic]) > Byte(ALogSeverity) then
+    if FIsCached then
+      CacheLog(ATopic, ALogSeverity, S)
+    else
+      for Writer in FRegisteredLoggers do
         try
-          Writer.Write(ALogType, S, FIndentSpaces, GetCurrentThreadID, Now);
-        finally
-          Writer.CloseLogChannel;
+          Writer.Lock.Enter;
+          try
+            Writer.OpenLogChannel;
+            try
+              Writer.Write(ATopic, ALogSeverity, S, FIndentSpaces, GetCurrentThreadID, Now);
+            finally
+              Writer.CloseLogChannel;
+            end;
+          finally
+            Writer.Lock.Leave;
+          end;
+        except
+          ;
         end;
-      finally
-        Writer.Lock.Leave;
-      end;
-    except
-      ;
-    end;
 end;
 
-class procedure TjachLog.LogError(const S: string);
+procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string);
 begin
-  Log(ltError, S);
+  Log(FDefaultTopic, ALogSeverity, S);
 end;
 
-class procedure TjachLog.LogError(E: Exception; const ExtraMsg: string);
+procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
 begin
-  Log(ltError, Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
+  Log(ATopic, lsEmergency, Format(S, Args), E);
 end;
 
-class procedure TjachLog.LogDebug(const S: string);
+procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
 begin
-  {$if defined(debug) or defined(dbglog)}
-  Log(ltDebug, S);
-  {$endif}
+  Log(ATopic, lsEmergency, ExtraMsg, E);
 end;
 
-class procedure TjachLog.LogDebug(const S: string;
+procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsEmergency, E);
+end;
+
+procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
-  {$if defined(debug) or defined(dbglog)}
-  LogDebug(Format(S, Args));
-  {$endif}
+  Log(ATopic, lsEmergency, Format(S, Args));
 end;
 
-class procedure TjachLog.LogError(E: Exception);
+procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; const S: string);
 begin
-  Log(ltError, GetExceptionStr(E));
+  Log(ATopic, lsEmergency, S);
 end;
 
-class procedure TjachLog.LogError(E: Exception; const S: string;
+procedure TjachLog.LogEmergency(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsEmergency, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogEmergency(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsEmergency, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogEmergency(E: Exception);
+begin
+  Log(lsEmergency, E);
+end;
+
+procedure TjachLog.LogEmergency(const S: string);
+begin
+  Log(lsEmergency, S);
+end;
+
+procedure TjachLog.LogEmergency(const S: string; const Args: array of const);
+begin
+  Log(lsEmergency, Format(S, Args));
+end;
+
+procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsAlert, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsAlert, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsAlert, E);
+end;
+
+procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
-  LogError(E, Format(S, Args));
+  Log(ATopic, lsAlert, Format(S, Args));
 end;
 
-class procedure TjachLog.LogFatalError(const S: string);
+procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; const S: string);
 begin
-  Log(ltFatalError, S);
+  Log(ATopic, lsAlert, S);
 end;
 
-class procedure TjachLog.LogFatalError(E: Exception; const ExtraMsg: string);
+procedure TjachLog.LogAlert(const S: string; const Args: array of const;
+  E: Exception);
 begin
-  Log(ltFatalError, Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
+  Log(lsAlert, Format(S, Args), E);
 end;
 
-class procedure TjachLog.LogFatalError(E: Exception);
+procedure TjachLog.LogAlert(const ExtraMsg: string; E: Exception);
 begin
-  Log(ltFatalError, GetExceptionStr(E));
+  Log(lsAlert, ExtraMsg, E);
 end;
 
-class procedure TjachLog.LogFatalError(E: Exception; const S: string;
+procedure TjachLog.LogAlert(E: Exception);
+begin
+  Log(lsAlert, E);
+end;
+
+procedure TjachLog.LogAlert(const S: string);
+begin
+  Log(lsAlert, S);
+end;
+
+procedure TjachLog.LogAlert(const S: string; const Args: array of const);
+begin
+  Log(lsAlert, Format(S, Args));
+end;
+
+procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsCritical, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsCritical, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsCritical, E);
+end;
+
+procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
-  LogFatalError(E, Format(S, Args));
+  Log(ATopic, lsCritical, Format(S, Args));
 end;
 
-class procedure TjachLog.LogInfo(const S: string;
+procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; const S: string);
+begin
+  Log(ATopic, lsCritical, S);
+end;
+
+procedure TjachLog.LogCritical(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsCritical, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogCritical(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsCritical, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogCritical(E: Exception);
+begin
+  Log(lsCritical, E);
+end;
+
+procedure TjachLog.LogCritical(const S: string);
+begin
+  Log(lsCritical, S);
+end;
+
+procedure TjachLog.LogCritical(const S: string; const Args: array of const);
+begin
+  Log(lsCritical, Format(S, Args));
+end;
+
+procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsError, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogError(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsError, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsError, E);
+end;
+
+procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
-  Log(ltInfo, Format(S, Args));
+  Log(ATopic, lsError, Format(S, Args));
 end;
 
-class procedure TjachLog.LogInfo(const S: string);
+procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; const S: string);
 begin
-  Log(ltInfo, S);
+  Log(ATopic, lsError, S);
 end;
 
-class procedure TjachLog.LogMessage(const S: string);
+procedure TjachLog.LogError(const S: string; const Args: array of const;
+  E: Exception);
 begin
-  Log(ltMessage, S);
+  Log(lsError, Format(S, Args), E);
 end;
 
-class procedure TjachLog.LogMessage(const S: string;
+procedure TjachLog.LogError(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsError, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogError(E: Exception);
+begin
+  Log(lsError, E);
+end;
+
+procedure TjachLog.LogError(const S: string);
+begin
+  Log(lsError, S);
+end;
+
+procedure TjachLog.LogError(const S: string; const Args: array of const);
+begin
+  Log(lsError, Format(S, Args));
+end;
+
+procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsWarning, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsWarning, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsWarning, E);
+end;
+
+procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
-  Log(ltMessage, Format(S, Args));
+  Log(ATopic, lsWarning, Format(S, Args));
 end;
 
-class procedure TjachLog.LogWarn(const S: string);
+procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; const S: string);
 begin
-  Log(ltWarn, S);
+  Log(ATopic, lsWarning, S);
 end;
 
-class procedure TjachLog.LogWarn(const S: string;
+procedure TjachLog.LogWarning(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsWarning, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogWarning(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsWarning, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogWarning(E: Exception);
+begin
+  Log(lsWarning, E);
+end;
+
+procedure TjachLog.LogWarning(const S: string);
+begin
+  Log(lsWarning, S);
+end;
+
+procedure TjachLog.LogWarning(const S: string; const Args: array of const);
+begin
+  Log(lsWarning, Format(S, Args));
+end;
+
+procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsNotice, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsNotice, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsNotice, E);
+end;
+
+procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
-  Log(ltWarn, Format(S, Args));
+  Log(ATopic, lsNotice, Format(S, Args));
 end;
 
-class procedure TjachLog.RegisterLogger(ALogger: TjachLogWriter);
+procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; const S: string);
+begin
+  Log(ATopic, lsNotice, S);
+end;
+
+procedure TjachLog.LogNotice(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsNotice, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogNotice(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsNotice, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogNotice(E: Exception);
+begin
+  Log(lsNotice, E);
+end;
+
+procedure TjachLog.LogNotice(const S: string);
+begin
+  Log(lsNotice, S);
+end;
+
+procedure TjachLog.LogNotice(const S: string; const Args: array of const);
+begin
+  Log(lsNotice, Format(S, Args));
+end;
+
+procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsInfo, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsInfo, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsInfo, E);
+end;
+
+procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const);
+begin
+  Log(ATopic, lsInfo, Format(S, Args));
+end;
+
+procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; const S: string);
+begin
+  Log(ATopic, lsInfo, S);
+end;
+
+procedure TjachLog.LogInfo(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsInfo, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogInfo(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsInfo, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogInfo(E: Exception);
+begin
+  Log(lsInfo, E);
+end;
+
+procedure TjachLog.LogInfo(const S: string);
+begin
+  Log(lsInfo, S);
+end;
+
+procedure TjachLog.LogInfo(const S: string; const Args: array of const);
+begin
+  Log(lsInfo, Format(S, Args));
+end;
+
+procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsDebug, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsDebug, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsDebug, E);
+end;
+
+procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const);
+begin
+  Log(ATopic, lsDebug, Format(S, Args));
+end;
+
+procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; const S: string);
+begin
+  Log(ATopic, lsDebug, S);
+end;
+
+procedure TjachLog.LogDebug(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsDebug, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogDebug(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsDebug, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogDebug(E: Exception);
+begin
+  Log(lsDebug, E);
+end;
+
+procedure TjachLog.LogDebug(const S: string);
+begin
+  Log(lsDebug, S);
+end;
+
+procedure TjachLog.LogDebug(const S: string; const Args: array of const);
+begin
+  Log(lsDebug, Format(S, Args));
+end;
+
+procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(ATopic, lsDebug, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, lsDebug, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; E: Exception);
+begin
+  Log(ATopic, lsDebug, E);
+end;
+
+procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string;
+  const Args: array of const);
+begin
+  Log(ATopic, lsDebug, Format(S, Args));
+end;
+
+procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string);
+begin
+  Log(ATopic, lsDebug, S);
+end;
+
+procedure TjachLog.LogDebugVerbose(const S: string; const Args: array of const;
+  E: Exception);
+begin
+  Log(lsDebug, Format(S, Args), E);
+end;
+
+procedure TjachLog.LogDebugVerbose(const ExtraMsg: string; E: Exception);
+begin
+  Log(lsDebug, ExtraMsg, E);
+end;
+
+procedure TjachLog.LogDebugVerbose(E: Exception);
+begin
+  Log(lsDebug, E);
+end;
+
+procedure TjachLog.LogDebugVerbose(const S: string);
+begin
+  Log(lsDebug, S);
+end;
+
+procedure TjachLog.LogDebugVerbose(const S: string; const Args: array of const);
+begin
+  Log(lsDebug, Format(S, Args));
+end;
+
+procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
+  const ExtraMsg: string; E: Exception);
+begin
+  Log(ATopic, ALogSeverity,  Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
+end;
+
+procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
+  const S: string; const Args: array of const; E: Exception);
+begin
+  Log(ATopic, ALogSeverity, Format(S, Args), E);
+end;
+
+procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
+  E: Exception);
+begin
+  Log(ATopic, ALogSeverity, GetExceptionStr(E));
+end;
+
+procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
+  const S: string; const Args: array of const);
+begin
+  Log(ATopic, ALogSeverity, Format(S, Args));
+end;
+
+procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string;
+  const Args: array of const; E: Exception);
+begin
+  Log(FDefaultTopic, ALogSeverity, Format(S, Args), E);
+end;
+
+procedure TjachLog.Log(ALogSeverity: TLogSeverity; const ExtraMsg: string;
+  E: Exception);
+begin
+  Log(FDefaultTopic, ALogSeverity, ExtraMsg, E);
+end;
+
+procedure TjachLog.Log(ALogSeverity: TLogSeverity; E: Exception);
+begin
+  Log(FDefaultTopic, ALogSeverity, E);
+end;
+
+procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string;
+  const Args: array of const);
+begin
+  Log(FDefaultTopic, ALogSeverity, Format(S, Args));
+end;
+
+procedure TjachLog.RegisterLogWriter(ALogger: TjachLogWriter);
 begin
   FRegisteredLoggers.Add(ALogger);
 end;
 
-class procedure TjachLog.WriteCachedLog;
+procedure TjachLog.SetIsCached(const Value: Boolean);
+begin
+  if FIsCached <> Value then
+    FIsCached := Value;
+end;
+
+procedure TjachLog.WriteCachedLog;
 var
   SavedIndentSpaces: string;
   LogEntry: TLogEntry;
   Writer: TjachLogWriter;
 begin
-  if not IsActive then
+  if not FIsActive then
   begin
     FCacheCS.Enter;
     try
-      GlobalLogCache.EntryList.Clear;
+      FCache.EntryList.Clear;
     finally
       FCacheCS.Leave;
     end;
@@ -625,64 +886,46 @@ begin
   SavedIndentSpaces := FIndentSpaces;
   try
     FIndentSpaces := '';
-    LogMessage('Cached LOG Write BEGIN ********************');
     try
       FCacheCS.Enter;
       try
         for Writer in FRegisteredLoggers do
+        begin
+          Writer.Lock.Enter;
           try
-            Writer.OpenLogChannel;
             try
-              for LogEntry in GlobalLogCache.EntryList do
-                Writer.Write(LogEntry.FLogType, LogEntry.FLogString, LogEntry.FIndent, LogEntry.FThreadID, LogEntry.FTimeStamp);
-            finally
-              Writer.CloseLogChannel;
+              Writer.OpenLogChannel;
+              try
+                Writer.Write(0, lsInfo, 'Cached LOG Write BEGIN ********************', '', GetCurrentThreadId, Now);
+                for LogEntry in FCache.EntryList do
+                  Writer.WriteEntry(LogEntry);
+                Writer.Write(0, lsInfo, 'Cached LOG Write END **********************', '', GetCurrentThreadId, Now);
+              finally
+                Writer.CloseLogChannel;
+              end;
+            except
+              ;
             end;
-          except
-            ;
+          finally
+            Writer.Lock.Leave;
           end;
+        end;
       finally
         FCacheCS.Leave;
       end;
-      LogMessage('Cached LOG Write END **********************');
     except
       on E:Exception do
       begin
         FIndentSpaces := '';
-        LogError(E, 'Cached LOG Write Error');
+        LogError('Cached LOG Write Error', E);
       end;
     end;
   finally
     FIndentSpaces := SavedIndentSpaces;
-    GlobalLogCache.EntryList.Clear;
+    FCache.EntryList.Clear;
   end;
 end;
 
-{ TLogCache }
-
-constructor TLogCache.Create;
-begin
-  inherited Create;
-  FEntryList := TLogEntryList.Create(True);
-end;
-
-destructor TLogCache.Destroy;
-begin
-  FEntryList.Free;
-  inherited;
-end;
-
-{ TDiskLogger }
-
 initialization
-  TjachLog.FCS := TCriticalSection.Create;
-  TjachLog.FCacheCS := TCriticalSection.Create;
-  TjachLog.FRegisteredLoggers := TObjectList<TjachLogWriter>.Create();
-
-  GlobalLogCache := TLogCache.Create;
 finalization
-  TjachLog.FCS.Free;
-  TjachLog.FCacheCS.Free;
-  TjachLog.FRegisteredLoggers.Free;
-  GlobalLogCache.Free;
 end.

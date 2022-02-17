@@ -38,7 +38,7 @@ interface
 {$define AutoRegisterjachLogToDisk}
 
 uses
-  UjachLogMgr, System.SyncObjs;
+  UjachLogMgr, System.SyncObjs, ujachLogClasses;
 
 type
   TjachLogToDisk = class(TjachLogWriter)
@@ -60,11 +60,12 @@ type
     procedure UpdateLogFileName;
     procedure SetMaxFileSize(const Value: UInt64);
     procedure SetIsMirroredToConsole(const Value: Boolean);
-  protected
+  public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
-    procedure Write(ALogType: TLogType; const S, AIndentSpaces: string;
-      const AThreadID: TThreadID; const ADateTime: TDateTime); override;
+    procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
+      const S, AIndentSpaces: string; const AThreadID: TThreadID;
+      const ATimeStamp: TDateTime); override;
     procedure RotateLogs;
     function GetLock: TCriticalSection; override;
   public
@@ -76,8 +77,6 @@ type
     property MaxFileSize: UInt64 read FMaxFileSize write SetMaxFileSize;
     property IsMirroredToConsole: Boolean read FIsMirroredToConsole write SetIsMirroredToConsole;
   end;
-
-function GetjachDiskLogger: TjachLogToDisk;
 
 implementation
 
@@ -232,17 +231,18 @@ begin
   FLogFileName := TPath.Combine(FBasePath, Temp);
 end;
 
-procedure TjachLogToDisk.Write(ALogType: TLogType; const S,
-  AIndentSpaces: string; const AThreadID: TThreadID; const ADateTime: TDateTime);
+procedure TjachLogToDisk.Write(ATopic: TjachLogTopicIndex;
+  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  const AThreadID: TThreadID; const ATimeStamp: TDateTime);
 var
   DT: string;
   Margin: string;
   Msgs: TStringDynArray;
   I: Integer;
 begin
-  DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', ADateTime)
+  DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', ATimeStamp)
     , AThreadID
-    , LogTypeToStr(ALogType)]);
+    , LogSeverityToStr(ASeverity)]);
   Margin := StringOfChar(' ', Length(DT));
   Msgs := WordWrap(S);
   Writeln(FLogFile, DT + ' ' + AIndentSpaces + Msgs[0]);
@@ -256,20 +256,6 @@ begin
   end;
 end;
 
-var
-  InternalLogger: TjachLogToDisk;
-
-function GetjachDiskLogger: TjachLogToDisk;
-begin
-  Result := InternalLogger;
-end;
-
 initialization
-  {$ifdef AutoRegisterjachLogToDisk}
-    InternalLogger := TjachLogToDisk.Create;
-    TjachLog.RegisterLogger(InternalLogger);
-  {$else}
-    InternalLogger := nil;
-  {$endif}
 finalization
 end.
