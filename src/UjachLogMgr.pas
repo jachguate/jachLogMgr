@@ -69,20 +69,27 @@ type
     FDefaultTopic: TjachLogTopicIndex;
     FIsCached: Boolean;
     FLogLevel: array[TjachLogTopicIndex] of TLogLevel;
+    FTopicName: array[TjachLogTopicIndex] of string;
     FCache: TLogCache;
     function GetExceptionStr(E: Exception): string;
     procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); inline;
   private
+    FIncludeTopicName: Boolean;
     procedure SetIsCached(const Value: Boolean);
     function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
     procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
+    function GetTopicName(Index: TjachLogTopicIndex): string;
+    procedure SetTopicName(Index: TjachLogTopicIndex; const Value: string);
+    procedure SetIncludeTopicName(const Value: Boolean);
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llInfo; ADefaultTopic: TjachLogTopicIndex = 0);
     destructor Destroy; override;
 
     property IsCached: Boolean read FIsCached write SetIsCached;
     property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
+    property TopicName[Index: TjachLogTopicIndex]: string read GetTopicName write SetTopicName;
     property DefaultTopic: TjachLogTopicIndex read FDefaultTopic write FDefaultTopic;
+    property IncludeTopicName: Boolean read FIncludeTopicName write SetIncludeTopicName;
 
     procedure IncIndent;
     procedure DecIndent;
@@ -293,6 +300,11 @@ begin
   Result := FLogLevel[Index];
 end;
 
+function TjachLog.GetTopicName(Index: TjachLogTopicIndex): string;
+begin
+  Result := FTopicName[Index];
+end;
+
 procedure TjachLog.IncIndent;
 begin
   FIndentSpaces := FIndentSpaces + '  ';
@@ -307,7 +319,10 @@ begin
 
   if Byte(FLogLevel[ATopic]) > Byte(ALogSeverity) then
     if FIsCached then
-      CacheLog(ATopic, ALogSeverity, S)
+      if FIncludeTopicName then
+        CacheLog(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S)
+      else
+        CacheLog(ATopic, ALogSeverity, S)
     else
       for Writer in FRegisteredLoggers do
         try
@@ -315,7 +330,10 @@ begin
           try
             Writer.OpenLogChannel;
             try
-              Writer.Write(ATopic, ALogSeverity, S, FIndentSpaces, GetCurrentThreadID, Now);
+              if FIncludeTopicName then
+                Writer.Write(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S, FIndentSpaces, GetCurrentThreadID, Now)
+              else
+                Writer.Write(ATopic, ALogSeverity, S, FIndentSpaces, GetCurrentThreadID, Now);
             finally
               Writer.CloseLogChannel;
             end;
@@ -870,6 +888,11 @@ begin
   FRegisteredLoggers.Add(ALogger);
 end;
 
+procedure TjachLog.SetIncludeTopicName(const Value: Boolean);
+begin
+  FIncludeTopicName := Value;
+end;
+
 procedure TjachLog.SetIsCached(const Value: Boolean);
 begin
   if FIsCached <> Value then
@@ -880,6 +903,11 @@ procedure TjachLog.SetLogLevel(Index: TjachLogTopicIndex;
   const Value: TLogLevel);
 begin
   FLogLevel[Index] := Value;
+end;
+
+procedure TjachLog.SetTopicName(Index: TjachLogTopicIndex; const Value: string);
+begin
+  FTopicName[Index] := Value;
 end;
 
 procedure TjachLog.WriteCachedLog;

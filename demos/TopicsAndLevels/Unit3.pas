@@ -14,10 +14,12 @@ type
     lblPath: TLabel;
     cboxTopic: TComboBox;
     Label2: TLabel;
+    chbxIncludeTopicName: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure cboxLevelChange(Sender: TObject);
     procedure cboxTopicClick(Sender: TObject);
+    procedure chbxIncludeTopicNameClick(Sender: TObject);
   private
   public
   end;
@@ -83,12 +85,20 @@ begin
   cboxLevel.ItemIndex := Integer(jachLog.LogLevel[cboxTopic.ItemIndex]);
 end;
 
+procedure TForm3.chbxIncludeTopicNameClick(Sender: TObject);
+begin
+  jachLog.IncludeTopicName := chbxIncludeTopicName.Checked;
+end;
+
 procedure TForm3.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
   for I := 0 to MAX_TOPIC do
+  begin
     cboxTopic.Items.Add(TOPIC_NAMES[I]);
+    jachLog.TopicName[I] := TOPIC_NAMES[I];
+  end;
   cboxTopic.ItemIndex := 0;
   GetLogDiskWriter.MaxLineSize := 80;
   lblPath.Caption := 'Log folder: ' + GetLogDiskWriter.BasePath;

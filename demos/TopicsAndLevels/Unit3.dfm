@@ -78,4 +78,13 @@ object Form3: TForm3
     TabOrder = 0
     OnClick = cboxTopicClick
   end
+  object chbxIncludeTopicName: TCheckBox
+    Left = 232
+    Top = 33
+    Width = 97
+    Height = 17
+    Caption = 'Topic name'
+    TabOrder = 3
+    OnClick = chbxIncludeTopicNameClick
+  end
 end
