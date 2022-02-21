@@ -1,11 +1,11 @@
 { ******************************************************** }
 { **                                                    ** }
-{ ** Basic multithreaded Log support for Delphi         ** }
+{ ** Multithreaded Log for Delphi                       ** }
 { **                                                    ** }
 { ** Author:                                            ** }
 { **     Juan Antonio Castillo H. (jachguate)           ** }
 { **                                                    ** }
-{ ** Copyright (c) 2007-2021                            ** }
+{ ** Copyright (c) 2007-2022                            ** }
 { **                                                    ** }
 { ** https://github.com/jachguate/jachLogMgr            ** }
 { **                                                    ** }
@@ -31,6 +31,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
+
 unit ujachLogToDisk;
 
 interface
@@ -51,7 +52,6 @@ type
     FLogFile: TextFile;
 
     FIsOpen: Boolean;
-    FLock: TCriticalSection;
     FMaxFileSize: UInt64;
     FIsMirroredToConsole: Boolean;
     FMaxLineSize: UInt16;
@@ -69,7 +69,6 @@ type
       const S, AIndentSpaces: string; const AThreadID: TThreadID;
       const ATimeStamp: TDateTime); override;
     procedure RotateLogs;
-    function GetLock: TCriticalSection; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -124,7 +123,6 @@ end;
 constructor TjachLogToDisk.Create;
 begin
   inherited Create;
-  FLock := TCriticalSection.Create;
   FIsMirroredToConsole := IsConsole;
   FMaxFileSize := 20 * 1024 * 1024; //20MB
   FMaxLineSize := 255;
@@ -134,15 +132,9 @@ end;
 
 destructor TjachLogToDisk.Destroy;
 begin
-  FLock.Free;
   if FIsOpen then
     CloseLogChannel;
   inherited;
-end;
-
-function TjachLogToDisk.GetLock: TCriticalSection;
-begin
-  Result := FLock;
 end;
 
 procedure TjachLogToDisk.OpenLogChannel;
