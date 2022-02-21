@@ -72,8 +72,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure OpenLogChannel; virtual; abstract;
-    procedure CloseLogChannel; virtual; abstract;
+    procedure OpenLogChannel; virtual;
+    procedure CloseLogChannel; virtual;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
       const S, AIndentSpaces: string; const AThreadID: TThreadID;
       const ATimeStamp: TDateTime); virtual; abstract;
@@ -186,6 +186,11 @@ end;
 
 { TjachLogWriter }
 
+procedure TjachLogWriter.CloseLogChannel;
+begin
+
+end;
+
 constructor TjachLogWriter.Create;
 begin
   inherited Create;
@@ -207,6 +212,11 @@ end;
 function TjachLogWriter.GetLock: TCriticalSection;
 begin
   Result := FLock;
+end;
+
+procedure TjachLogWriter.OpenLogChannel;
+begin
+
 end;
 
 procedure TjachLogWriter.SetWriterThread(AThread: TThread);

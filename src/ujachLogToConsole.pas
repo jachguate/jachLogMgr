@@ -32,45 +32,75 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 
-unit ujachLogAuto;
+unit ujachLogToConsole;
 
 interface
 
+{$define AutoRegisterjachLogToDisk}
+
 uses
-  ujachLogClasses, UjachLogMgr, ujachLogToDisk, ujachLogToConsole;
+  UjachLogMgr, System.SyncObjs, ujachLogClasses;
 
-var
-  jachLog: TjachLog;
-
-  function GetLogDiskWriter: TjachLogToDisk;
-  function GetLogConsoleWriter: TjachLogToConsole;
+type
+  TjachLogToConsole = class(TjachLogWriter)
+  private
+    FMaxLineSize: UInt16;
+  public
+    procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
+      const S, AIndentSpaces: string; const AThreadID: TThreadID;
+      const ATimeStamp: TDateTime); override;
+  end;
 
 implementation
 
+uses
+    System.IOUtils
+  {$ifdef MSWindows}
+  , Windows
+  {$endif}
+  , System.SysUtils
+  , System.Types;
+
+{ TjachLogToConsole }
+
+procedure TjachLogToConsole.Write(ATopic: TjachLogTopicIndex;
+  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  const AThreadID: TThreadID; const ATimeStamp: TDateTime);
 var
-  lLogToDisk: TjachLogToDisk;
-  lLogToConsole: TjachLogToConsole;
-
-function GetLogDiskWriter: TjachLogToDisk;
+  DT: string;
+  Margin: string;
+  Msgs: TStringDynArray;
+  I: Integer;
+  lpConsoleScreenBufferInfo: _CONSOLE_SCREEN_BUFFER_INFO;
+  MaxWidth: Integer;
 begin
-  Result := lLogToDisk;
-end;
+  try
+    if not GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), lpConsoleScreenBufferInfo) then
+      RaiseLastOSError;
+    if IsMultiThread then
+      DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', Now)
+        , GetCurrentThreadID
+        , LogSeverityToStr(ASeverity)])
+    else
+      DT := Format('%s %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', Now)
+        , LogSeverityToStr(ASeverity)]);
 
-function GetLogConsoleWriter: TjachLogToConsole;
-begin
-  Result := lLogToConsole;
-end;
+    Margin := StringOfChar(' ', Length(DT));
+    MaxWidth := lpConsoleScreenBufferInfo.dwSize.X - Length(AIndentSpaces) - Length(DT) - 2;
+    if MaxWidth < 10 then
+      MaxWidth := 10;
 
+    Msgs := WordWrap(S, MaxWidth);
+    Writeln(DT + ' ' + AIndentSpaces + Msgs[0]);
+    for I := 1 to High(Msgs) do
+      Writeln(Margin + ' ' + AIndentSpaces + Msgs[I]);
+  except
+    on E: Exception do
+      Writeln(E.Message);
+    //no exceptions!
+  end;
+end;
 
 initialization
-  jachLog := TjachLog.Create();
-  lLogToDisk := TjachLogToDisk.Create;
-  jachLog.RegisterLogWriter(lLogToDisk);
-  if IsConsole then
-  begin
-    lLogToConsole := TjachLogToConsole.Create;
-    jachLog.RegisterLogWriter(lLogToConsole);
-  end;
 finalization
-  jachLog.Free;
 end.

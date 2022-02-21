@@ -53,14 +53,12 @@ type
 
     FIsOpen: Boolean;
     FMaxFileSize: UInt64;
-    FIsMirroredToConsole: Boolean;
     FMaxLineSize: UInt16;
     procedure SetFileNamePrefix(const Value: string);
     procedure SetFileNameSuffix(const Value: string);
     procedure SetBasePath(const Value: string);
     procedure UpdateLogFileName;
     procedure SetMaxFileSize(const Value: UInt64);
-    procedure SetIsMirroredToConsole(const Value: Boolean);
     procedure SetMaxLineSize(const Value: UInt16);
   public
     procedure OpenLogChannel; override;
@@ -77,7 +75,6 @@ type
     property FileNameSuffix: string read FFileNameSuffix write SetFileNameSuffix;
     property MaxFileSize: UInt64 read FMaxFileSize write SetMaxFileSize;
     property MaxLineSize: UInt16 read FMaxLineSize write SetMaxLineSize;
-    property IsMirroredToConsole: Boolean read FIsMirroredToConsole write SetIsMirroredToConsole;
   end;
 
 implementation
@@ -123,7 +120,6 @@ end;
 constructor TjachLogToDisk.Create;
 begin
   inherited Create;
-  FIsMirroredToConsole := IsConsole;
   FMaxFileSize := 20 * 1024 * 1024; //20MB
   FMaxLineSize := 255;
   FBasePath := GetDefaultBasePath;
@@ -208,11 +204,6 @@ begin
   UpdateLogFileName;
 end;
 
-procedure TjachLogToDisk.SetIsMirroredToConsole(const Value: Boolean);
-begin
-  FIsMirroredToConsole := Value;
-end;
-
 procedure TjachLogToDisk.SetMaxFileSize(const Value: UInt64);
 begin
   FMaxFileSize := Value;
@@ -247,13 +238,9 @@ begin
   Margin := StringOfChar(' ', Length(DT));
   Msgs := WordWrap(S, FMaxLineSize);
   Writeln(FLogFile, DT + ' ' + AIndentSpaces + Msgs[0]);
-  if IsConsole and FIsMirroredToConsole then
-    Writeln(DT + ' ' + AIndentSpaces + Msgs[0]);
   for I := 1 to High(Msgs) do
   begin
     Writeln(FLogFile, Margin + ' ' + AIndentSpaces + Msgs[I]);
-    if IsConsole and FIsMirroredToConsole then
-      Writeln(Margin + ' ' + AIndentSpaces + Msgs[I]);
   end;
 end;
 
