@@ -32,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 
-unit UjachLogMgr;
+unit ujachLogMgr;
 
 interface
 uses Classes, SysUtils, System.Types, SyncObjs, System.Generics.Collections,
@@ -84,6 +84,7 @@ type
     procedure SetIncludeTopicName(const Value: Boolean);
     procedure SetUseSeparateThreadToWrite(const Value: Boolean);
     procedure FreeRegisteredLogWriters;
+    procedure TerminateCoordinatorThread;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llInfo; ADefaultTopic: TjachLogTopicIndex = 0);
     destructor Destroy; override;
@@ -302,6 +303,8 @@ end;
 destructor TjachLog.Destroy;
 begin
   FIsActive := False;
+  if FUseSeparateThreadToWrite then
+    TerminateCoordinatorThread;
   FCacheCS.Free;
   FCS.Free;
   FreeRegisteredLogWriters;
@@ -990,16 +993,19 @@ begin
         FWriteThread := TjachLogWriteCoordinatorThread.Create(Self);
       FUseSeparateThreadToWrite := Value;
       if not Value then
-      begin
-        FWriteThread.Terminate;
-        FWriteThread.WaitFor;
-        FWriteThread.Free;
-        FWriteThread := nil;
-      end;
+        TerminateCoordinatorThread;
     end;
   finally
     FCS.Leave;
   end;
+end;
+
+procedure TjachLog.TerminateCoordinatorThread;
+begin
+  FWriteThread.Terminate;
+  FWriteThread.WaitFor;
+  FWriteThread.Free;
+  FWriteThread := nil;
 end;
 
 procedure TjachLog.WriteCachedLog;
