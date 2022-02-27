@@ -199,13 +199,13 @@ end;
 
 destructor TjachLogWriter.Destroy;
 begin
-  FLock.Free;
   if Assigned(FThread) then
   begin
     FThread.Terminate;
     FThread.WaitFor;
     FThread.Free;
   end;
+  FLock.Free;
   inherited;
 end;
 
@@ -284,7 +284,8 @@ end;
 
 procedure TjachLogWriter.WriteEntry(AEntry: IjachLogEntry);
 begin
-  Write(AEntry.Topic, AEntry.Severity, AEntry.LogString, AEntry.Indent, AEntry.ThreadID, AEntry.TimeStamp);
+  if Assigned(AEntry) then
+    Write(AEntry.Topic, AEntry.Severity, AEntry.LogString, AEntry.Indent, AEntry.ThreadID, AEntry.TimeStamp);
 end;
 
 { TLogCache }

@@ -43,8 +43,6 @@ uses
 
 type
   TjachLogToConsole = class(TjachLogWriter)
-  private
-    FMaxLineSize: UInt16;
   public
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
       const S, AIndentSpaces: string; const AThreadID: TThreadID;

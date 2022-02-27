@@ -1186,8 +1186,6 @@ begin
 end;
 
 procedure TjachLogWriterThread.Execute;
-var
-  AItem: IjachLogEntry;
 begin
   inherited;
   while not Terminated do
@@ -1195,20 +1193,21 @@ begin
     if     (not FEntryQueue.ShutDown)
        and (FEntryQueue.TotalItemsPushed > FEntryQueue.TotalItemsPopped) then
     begin
+      FWriter.GetLock.Enter;
       try
         FWriter.OpenLogChannel;
         try
-          while     (not FEntryQueue.ShutDown)
+          while     (not Terminated)
+                and (not FEntryQueue.ShutDown)
                 and (FEntryQueue.TotalItemsPushed > FEntryQueue.TotalItemsPopped) do
           begin
-            AItem := FEntryQueue.PopItem;
-            FWriter.WriteEntry(AItem);
+            FWriter.WriteEntry(FEntryQueue.PopItem);
           end;
         finally
           FWriter.CloseLogChannel;
         end;
       finally
-        FWriter.CloseLogChannel;
+        FWriter.GetLock.Leave;
       end;
     end
     else
