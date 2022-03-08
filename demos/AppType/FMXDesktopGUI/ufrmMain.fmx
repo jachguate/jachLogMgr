@@ -1,0 +1,94 @@
+object Form3: TForm3
+  Left = 0
+  Top = 0
+  Caption = 'Form3'
+  ClientHeight = 480
+  ClientWidth = 640
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object Memo1: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    Lines.Strings = (
+      
+        'This demo shows how to provide live feedback to the user in the ' +
+        'UI while using the jachLog library in a FMX application.'
+      
+        'Click the buttons to write entries to the log file and to inspec' +
+        't the folder where the log is saved.'
+      
+        'Look at the source code to learn how to use the library and chec' +
+        'k the documentation at https://github.com/jachguate/jachLogMgr/w' +
+        'iki.'
+      ''
+      
+        'If you use a RichEdit like control and want a rich output, conta' +
+        'ct the author to look for a specific writer for your control.')
+    ReadOnly = True
+    TextSettings.WordWrap = True
+    Align = Top
+    Size.Width = 640.000000000000000000
+    Size.Height = 145.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Viewport.Width = 636.000000000000000000
+    Viewport.Height = 141.000000000000000000
+  end
+  object Panel1: TPanel
+    Align = Top
+    Position.Y = 169.000000000000000000
+    Size.Width = 640.000000000000000000
+    Size.Height = 80.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object Button1: TButton
+      Anchors = [akLeft, akTop, akRight]
+      Position.X = 8.000000000000000000
+      Position.Y = 16.000000000000000000
+      Size.Width = 625.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Write some log (same thread)'
+      OnClick = Button1Click
+    end
+    object btnOpenLogFolder: TButton
+      Anchors = [akLeft, akTop, akRight]
+      Position.X = 8.000000000000000000
+      Position.Y = 48.000000000000000000
+      Size.Width = 625.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Open log folder'
+      OnClick = btnOpenLogFolderClick
+    end
+  end
+  object Splitter1: TSplitter
+    Align = Top
+    Cursor = crVSplit
+    MinSize = 20.000000000000000000
+    Position.Y = 145.000000000000000000
+    Size.Width = 640.000000000000000000
+    Size.Height = 24.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object memoLog: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    StyledSettings = [Style, FontColor]
+    TextSettings.Font.Family = 'Consolas'
+    Align = Client
+    Size.Width = 640.000000000000000000
+    Size.Height = 231.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    Viewport.Width = 636.000000000000000000
+    Viewport.Height = 227.000000000000000000
+  end
+end

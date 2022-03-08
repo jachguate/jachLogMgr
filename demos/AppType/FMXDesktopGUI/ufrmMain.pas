@@ -3,37 +3,46 @@ unit ufrmMain;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls;
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
+  FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, ujachLogToFMXMemo;
 
 type
-  TfrmMain = class(TForm)
+  TForm3 = class(TForm)
+    Memo1: TMemo;
+    Panel1: TPanel;
     Button1: TButton;
     btnOpenLogFolder: TButton;
-    richDemoText: TRichEdit;
-    Panel1: TPanel;
     Splitter1: TSplitter;
+    memoLog: TMemo;
     procedure Button1Click(Sender: TObject);
     procedure btnOpenLogFolderClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy(Sender: TObject);
   private
+    FLoggerToFMXMemo: TjachLogToFMXMemo;
   public
   end;
 
 var
-  frmMain: TfrmMain;
+  Form3: TForm3;
 
 implementation
 
 uses
-  ujachLogAuto, ujachLogMgr, Winapi.ShellAPI;
+  ujachLogMgr, ujachLogAuto, Winapi.ShellAPI, Winapi.Windows;
 
-{$R *.dfm}
+{$R *.fmx}
 
-procedure TfrmMain.Button1Click(Sender: TObject);
+procedure TForm3.btnOpenLogFolderClick(Sender: TObject);
 begin
-  Screen.Cursor := crHourGlass;
+  ForceDirectories(GetLogDiskWriter.BasePath);
+  Winapi.ShellAPI.ShellExecute(0, 'open', PChar(GetLogDiskWriter.BasePath), nil, nil, SW_SHOWNORMAL)
+end;
+
+procedure TForm3.Button1Click(Sender: TObject);
+begin
+//  Screen.Cursor := crHourGlass;
   try
     try
       jachLog.IncIndent;
@@ -69,33 +78,33 @@ begin
         jachLog.LogCritical('Processing failure with error:', E);
     end;
   finally
-    Screen.Cursor := crDefault;
+//    Screen.Cursor := crDefault;
   end;
 end;
 
-procedure TfrmMain.btnOpenLogFolderClick(Sender: TObject);
+procedure TForm3.FormCreate(Sender: TObject);
+//var
+//  strDemoText: TResourceStream;
 begin
-  ForceDirectories(GetLogDiskWriter.BasePath);
-  Winapi.ShellAPI.ShellExecute(0, 'open', PChar(GetLogDiskWriter.BasePath), nil, nil, SW_SHOWNORMAL)
-end;
-
-procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  jachLog.LogInfo('Program ended');
-end;
-
-procedure TfrmMain.FormCreate(Sender: TObject);
-var
-  strDemoText: TResourceStream;
-begin
+  FLoggerToFMXMemo := TjachLogToFMXMemo.Create;
+  FLoggerToFMXMemo.Memo := memoLog;
+  FLoggerToFMXMemo.IsActive := True;
+  jachLog.RegisterLogWriter(FLoggerToFMXMemo);
   jachLog.LogInfo('Program started');
-  btnOpenLogFolder.Caption := 'Open log folder: ' + GetLogDiskWriter.BasePath;
-  strDemoText := TResourceStream.Create(hInstance, 'DemoText', RT_RCDATA);
-  try
-    richDemoText.Lines.LoadFromStream(strDemoText);
-  finally
-    strDemoText.Free;
-  end;
+  btnOpenLogFolder.Text := 'Open log folder: ' + GetLogDiskWriter.BasePath;
+//  strDemoText := TResourceStream.Create(hInstance, 'DemoText', RT_RCDATA);
+//  try
+//    richDemoText.Lines.LoadFromStream(strDemoText);
+//  finally
+//    strDemoText.Free;
+//  end;
+end;
+
+procedure TForm3.FormDestroy(Sender: TObject);
+begin
+  jachLog.UnRegisterLogWriter(FLoggerToFMXMemo);
+  FreeAndNil(FLoggerToFMXMemo);
+  jachLog.LogInfo('Program ended');
 end;
 
 end.

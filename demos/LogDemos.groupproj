@@ -1,0 +1,132 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BAD65F60-76D8-49D6-9F06-DE1FF22C5142}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="AppType\VCLDesktop\VCLDesktopDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AppType\Console\BasicConsoleDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AppType\WindowsService\jachLogServiceDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AppType\VCLDesktopGUI\VCLDesktopGUIDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Features\TopicsAndLevels\TopicAndLevelsDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Features\MultiThreadedAppCache\MultiThreadedCacheDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Features\MultiThreadedApp\MultiThreadedDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Features\LevelFilter\LevelFilterDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AppType\FMXDesktopGUI\FMXDesktopGUIDemo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="VCLDesktopDemo">
+        <MSBuild Projects="AppType\VCLDesktop\VCLDesktopDemo.dproj"/>
+    </Target>
+    <Target Name="VCLDesktopDemo:Clean">
+        <MSBuild Projects="AppType\VCLDesktop\VCLDesktopDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCLDesktopDemo:Make">
+        <MSBuild Projects="AppType\VCLDesktop\VCLDesktopDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="BasicConsoleDemo">
+        <MSBuild Projects="AppType\Console\BasicConsoleDemo.dproj"/>
+    </Target>
+    <Target Name="BasicConsoleDemo:Clean">
+        <MSBuild Projects="AppType\Console\BasicConsoleDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="BasicConsoleDemo:Make">
+        <MSBuild Projects="AppType\Console\BasicConsoleDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="jachLogServiceDemo">
+        <MSBuild Projects="AppType\WindowsService\jachLogServiceDemo.dproj"/>
+    </Target>
+    <Target Name="jachLogServiceDemo:Clean">
+        <MSBuild Projects="AppType\WindowsService\jachLogServiceDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="jachLogServiceDemo:Make">
+        <MSBuild Projects="AppType\WindowsService\jachLogServiceDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCLDesktopGUIDemo">
+        <MSBuild Projects="AppType\VCLDesktopGUI\VCLDesktopGUIDemo.dproj"/>
+    </Target>
+    <Target Name="VCLDesktopGUIDemo:Clean">
+        <MSBuild Projects="AppType\VCLDesktopGUI\VCLDesktopGUIDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCLDesktopGUIDemo:Make">
+        <MSBuild Projects="AppType\VCLDesktopGUI\VCLDesktopGUIDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TopicAndLevelsDemo">
+        <MSBuild Projects="Features\TopicsAndLevels\TopicAndLevelsDemo.dproj"/>
+    </Target>
+    <Target Name="TopicAndLevelsDemo:Clean">
+        <MSBuild Projects="Features\TopicsAndLevels\TopicAndLevelsDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TopicAndLevelsDemo:Make">
+        <MSBuild Projects="Features\TopicsAndLevels\TopicAndLevelsDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="MultiThreadedCacheDemo">
+        <MSBuild Projects="Features\MultiThreadedAppCache\MultiThreadedCacheDemo.dproj"/>
+    </Target>
+    <Target Name="MultiThreadedCacheDemo:Clean">
+        <MSBuild Projects="Features\MultiThreadedAppCache\MultiThreadedCacheDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MultiThreadedCacheDemo:Make">
+        <MSBuild Projects="Features\MultiThreadedAppCache\MultiThreadedCacheDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="MultiThreadedDemo">
+        <MSBuild Projects="Features\MultiThreadedApp\MultiThreadedDemo.dproj"/>
+    </Target>
+    <Target Name="MultiThreadedDemo:Clean">
+        <MSBuild Projects="Features\MultiThreadedApp\MultiThreadedDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="MultiThreadedDemo:Make">
+        <MSBuild Projects="Features\MultiThreadedApp\MultiThreadedDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LevelFilterDemo">
+        <MSBuild Projects="Features\LevelFilter\LevelFilterDemo.dproj"/>
+    </Target>
+    <Target Name="LevelFilterDemo:Clean">
+        <MSBuild Projects="Features\LevelFilter\LevelFilterDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LevelFilterDemo:Make">
+        <MSBuild Projects="Features\LevelFilter\LevelFilterDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMXDesktopGUIDemo">
+        <MSBuild Projects="AppType\FMXDesktopGUI\FMXDesktopGUIDemo.dproj"/>
+    </Target>
+    <Target Name="FMXDesktopGUIDemo:Clean">
+        <MSBuild Projects="AppType\FMXDesktopGUI\FMXDesktopGUIDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMXDesktopGUIDemo:Make">
+        <MSBuild Projects="AppType\FMXDesktopGUI\FMXDesktopGUIDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="VCLDesktopDemo;BasicConsoleDemo;jachLogServiceDemo;VCLDesktopGUIDemo;TopicAndLevelsDemo;MultiThreadedCacheDemo;MultiThreadedDemo;LevelFilterDemo;FMXDesktopGUIDemo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="VCLDesktopDemo:Clean;BasicConsoleDemo:Clean;jachLogServiceDemo:Clean;VCLDesktopGUIDemo:Clean;TopicAndLevelsDemo:Clean;MultiThreadedCacheDemo:Clean;MultiThreadedDemo:Clean;LevelFilterDemo:Clean;FMXDesktopGUIDemo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="VCLDesktopDemo:Make;BasicConsoleDemo:Make;jachLogServiceDemo:Make;VCLDesktopGUIDemo:Make;TopicAndLevelsDemo:Make;MultiThreadedCacheDemo:Make;MultiThreadedDemo:Make;LevelFilterDemo:Make;FMXDesktopGUIDemo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

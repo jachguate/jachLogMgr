@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls,
+  ujachLogToVCLRichEdit;
 
 type
   TfrmMain = class(TForm)
@@ -13,11 +14,13 @@ type
     richDemoText: TRichEdit;
     Panel1: TPanel;
     Splitter1: TSplitter;
+    richLog: TRichEdit;
     procedure Button1Click(Sender: TObject);
     procedure btnOpenLogFolderClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    FLoggerToRichEdit: TjachLogToVCLRichEdit;
   public
   end;
 
@@ -81,6 +84,8 @@ end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  jachLog.UnRegisterLogWriter(FLoggerToRichEdit);
+  FreeAndNil(FLoggerToRichEdit);
   jachLog.LogInfo('Program ended');
 end;
 
@@ -88,6 +93,10 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 var
   strDemoText: TResourceStream;
 begin
+  FLoggerToRichEdit := TjachLogToVCLRichEdit.Create;
+  FLoggerToRichEdit.RichEdit := richLog;
+  FLoggerToRichEdit.IsActive := True;
+  jachLog.RegisterLogWriter(FLoggerToRichEdit);
   jachLog.LogInfo('Program started');
   btnOpenLogFolder.Caption := 'Open log folder: ' + GetLogDiskWriter.BasePath;
   strDemoText := TResourceStream.Create(hInstance, 'DemoText', RT_RCDATA);

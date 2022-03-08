@@ -32,7 +32,7 @@ var
 implementation
 
 uses
-  ujachLogAuto, ujachLogClasses, ujachLogMgr, System.Win.Registry;
+  ujachLogAuto, ujachLogMgr, System.Win.Registry;
 
 {$R *.dfm}
 

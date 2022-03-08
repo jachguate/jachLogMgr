@@ -52,7 +52,7 @@ var
 implementation
 
 uses
-  ujachLogAuto, System.Types;
+  ujachLogMgr, ujachLogAuto, System.Types;
 
 {$R *.dfm}
 

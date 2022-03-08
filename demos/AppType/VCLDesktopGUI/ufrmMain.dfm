@@ -2,7 +2,7 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'jachLog VCL Desktop demo'
-  ClientHeight = 250
+  ClientHeight = 458
   ClientWidth = 526
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -49,11 +49,15 @@ object frmMain: TfrmMain
     Height = 74
     Align = alTop
     TabOrder = 1
+    DesignSize = (
+      526
+      74)
     object btnOpenLogFolder: TButton
       Left = 8
       Top = 39
       Width = 510
       Height = 25
+      Anchors = [akLeft, akTop, akRight]
       Caption = 'Open log folder'
       TabOrder = 0
       OnClick = btnOpenLogFolderClick
@@ -63,9 +67,27 @@ object frmMain: TfrmMain
       Top = 8
       Width = 510
       Height = 25
-      Caption = 'Write some log to disk'
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'Write some log (same thread)'
       TabOrder = 1
       OnClick = Button1Click
     end
+  end
+  object richLog: TRichEdit
+    Left = 0
+    Top = 233
+    Width = 526
+    Height = 225
+    Align = alClient
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Consolas'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 2
+    WordWrap = False
+    Zoom = 100
   end
 end

@@ -33,10 +33,10 @@ type
     FMsgs: TThreadedQueue<TMsg>;
     FActiveThreads: Integer;
     FMoreMsgs: Boolean;
-    procedure AddMsg(S: string); overload;
-    procedure AddMsg(S: string; Args: array of const); overload;
     procedure ThreadTerminate(Sender: TObject);
   public
+    procedure AddMsg(S: string); overload;
+    procedure AddMsg(S: string; Args: array of const); overload;
   end;
 
 
@@ -54,7 +54,7 @@ var
 implementation
 
 uses
-  ujachLogAuto, System.Types;
+  ujachLogMgr, ujachLogAuto, System.Types;
 
 {$R *.dfm}
 

@@ -25,7 +25,7 @@ var
 implementation
 
 uses
-  ujachLogAuto, ujachLogClasses;
+  ujachLogMgr, ujachLogAuto;
 
 {$R *.dfm}
 
