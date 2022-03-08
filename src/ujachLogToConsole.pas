@@ -39,7 +39,7 @@ interface
 {$define AutoRegisterjachLogToDisk}
 
 uses
-  UjachLogMgr, System.SyncObjs, ujachLogClasses;
+  UjachLogMgr, System.SyncObjs;
 
 type
   TjachLogToConsole = class(TjachLogWriter)

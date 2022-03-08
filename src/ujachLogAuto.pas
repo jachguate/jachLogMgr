@@ -37,10 +37,7 @@ unit ujachLogAuto;
 interface
 
 uses
-  ujachLogClasses, UjachLogMgr, ujachLogToDisk, ujachLogToConsole;
-
-var
-  jachLog: TjachLog;
+  UjachLogMgr, ujachLogToDisk, ujachLogToConsole;
 
   function GetLogDiskWriter: TjachLogToDisk;
   function GetLogConsoleWriter: TjachLogToConsole;
@@ -60,7 +57,6 @@ function GetLogConsoleWriter: TjachLogToConsole;
 begin
   Result := lLogToConsole;
 end;
-
 
 initialization
   jachLog := TjachLog.Create();

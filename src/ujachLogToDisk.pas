@@ -36,10 +36,8 @@ unit ujachLogToDisk;
 
 interface
 
-{$define AutoRegisterjachLogToDisk}
-
 uses
-  UjachLogMgr, System.SyncObjs, ujachLogClasses;
+  UjachLogMgr, System.SyncObjs;
 
 type
   TjachLogToDisk = class(TjachLogWriter)
