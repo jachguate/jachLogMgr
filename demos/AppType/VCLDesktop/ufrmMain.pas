@@ -12,7 +12,6 @@ type
     btnOpenLogFolder: TButton;
     richDemoText: TRichEdit;
     Panel1: TPanel;
-    Splitter1: TSplitter;
     procedure Button1Click(Sender: TObject);
     procedure btnOpenLogFolderClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);

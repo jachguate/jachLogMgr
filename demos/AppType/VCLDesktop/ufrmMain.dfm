@@ -15,22 +15,13 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
-    Left = 0
-    Top = 156
-    Width = 526
-    Height = 3
-    Cursor = crVSplit
-    Align = alTop
-    ExplicitTop = 95
-  end
   object richDemoText: TRichEdit
     Left = 0
     Top = 0
     Width = 526
-    Height = 156
+    Height = 176
     TabStop = False
-    Align = alTop
+    Align = alClient
     Color = clBtnFace
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -41,19 +32,24 @@ object frmMain: TfrmMain
     ReadOnly = True
     TabOrder = 0
     Zoom = 100
+    ExplicitTop = 2
   end
   object Panel1: TPanel
     Left = 0
-    Top = 159
+    Top = 176
     Width = 526
     Height = 74
-    Align = alTop
+    Align = alBottom
     TabOrder = 1
+    DesignSize = (
+      526
+      74)
     object btnOpenLogFolder: TButton
       Left = 8
       Top = 39
       Width = 510
       Height = 25
+      Anchors = [akLeft, akTop, akRight]
       Caption = 'Open log folder'
       TabOrder = 0
       OnClick = btnOpenLogFolderClick
@@ -63,6 +59,7 @@ object frmMain: TfrmMain
       Top = 8
       Width = 510
       Height = 25
+      Anchors = [akLeft, akTop, akRight]
       Caption = 'Write some log to disk'
       TabOrder = 1
       OnClick = Button1Click

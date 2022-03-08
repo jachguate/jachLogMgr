@@ -1,14 +1,16 @@
 program TopicAndLevelsDemo;
 
+{$R *.dres}
+
 uses
   Vcl.Forms,
-  Unit3 in 'Unit3.pas' {Form3};
+  ufrmMain in 'ufrmMain.pas' {frmMain};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm3, Form3);
+  Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.
