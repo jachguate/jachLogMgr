@@ -69,12 +69,15 @@ type
     FLock: TCriticalSection;
     FThread: TThread;
     FIsActive: Boolean;
+    FLogLevel: array[TjachLogTopicIndex] of TLogLevel;
     procedure SetIsActive(const Value: Boolean);
+    function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
+    procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
   protected
     const WWMAX_LEN = 255;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
   public
-    constructor Create;
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll);
     destructor Destroy; override;
     procedure OpenLogChannel; virtual;
     procedure CloseLogChannel; virtual;
@@ -87,6 +90,7 @@ type
     property IsActive: Boolean read FIsActive write SetIsActive;
     property Lock: TCriticalSection read GetLock;
     property Thread: TThread read FThread;
+    property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
   end;
 
   TjachLogWriterClass = class of TjachLogWriter;
@@ -404,10 +408,14 @@ begin
 end;
 
 constructor TjachLogWriter.Create;
+var
+  I: Integer;
 begin
   inherited Create;
   FIsActive := True;
   FLock := TCriticalSection.Create;
+  for I := Low(FLogLevel) to High(FLogLevel) do
+    FLogLevel[I] := ADefaultTopicLevel;
 end;
 
 destructor TjachLogWriter.Destroy;
@@ -427,6 +435,11 @@ begin
   Result := FLock;
 end;
 
+function TjachLogWriter.GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
+begin
+  Result := FLogLevel[Index];
+end;
+
 procedure TjachLogWriter.OpenLogChannel;
 begin
 
@@ -435,6 +448,12 @@ end;
 procedure TjachLogWriter.SetIsActive(const Value: Boolean);
 begin
   FIsActive := Value;
+end;
+
+procedure TjachLogWriter.SetLogLevel(Index: TjachLogTopicIndex;
+  const Value: TLogLevel);
+begin
+  FLogLevel[Index] := Value;
 end;
 
 procedure TjachLogWriter.SetWriterThread(AThread: TThread);
@@ -678,21 +697,22 @@ begin
       lRegisteredLogWriters := FRegisteredLogWriters.LockList;
       try
         for Writer in lRegisteredLogWriters do
-          try
-            Writer.Lock.Enter;
+          if Writer.IsActive and (Byte(Writer.FLogLevel[ATopic]) > Byte(ALogSeverity)) then
             try
-              Writer.OpenLogChannel;
+              Writer.Lock.Enter;
               try
-                if FIncludeTopicName then
-                  Writer.Write(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S, FIndentSpaces, GetCurrentThreadID, Now)
-                else
-                  Writer.Write(ATopic, ALogSeverity, S, FIndentSpaces, GetCurrentThreadID, Now);
+                Writer.OpenLogChannel;
+                try
+                  if FIncludeTopicName then
+                    Writer.Write(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S, FIndentSpaces, GetCurrentThreadID, Now)
+                  else
+                    Writer.Write(ATopic, ALogSeverity, S, FIndentSpaces, GetCurrentThreadID, Now);
+                finally
+                  Writer.CloseLogChannel;
+                end;
               finally
-                Writer.CloseLogChannel;
+                Writer.Lock.Leave;
               end;
-            finally
-              Writer.Lock.Leave;
-            end;
           except
             ;
           end;
@@ -1353,24 +1373,26 @@ begin
         try
           for Writer in lRegisteredLogWriters do
           begin
-            Writer.Lock.Enter;
-            try
+            if Writer.IsActive then
               try
-                Writer.OpenLogChannel;
+                Writer.Lock.Enter;
                 try
-                  Writer.Write(0, lsInfo, 'Cached LOG Write BEGIN ********************', '', GetCurrentThreadId, Now);
-                  for LogEntry in FCache.EntryList do
-                    Writer.WriteEntry(LogEntry);
-                  Writer.Write(0, lsInfo, 'Cached LOG Write END **********************', '', GetCurrentThreadId, Now);
+                  Writer.OpenLogChannel;
+                  try
+                    Writer.Write(0, lsInfo, 'Cached LOG Write BEGIN ********************', '', GetCurrentThreadId, Now);
+                    for LogEntry in FCache.EntryList do
+                      if (Byte(Writer.FLogLevel[LogEntry.Topic]) > Byte(LogEntry.Severity)) then
+                        Writer.WriteEntry(LogEntry);
+                    Writer.Write(0, lsInfo, 'Cached LOG Write END **********************', '', GetCurrentThreadId, Now);
+                  finally
+                    Writer.CloseLogChannel;
+                  end;
                 finally
-                  Writer.CloseLogChannel;
+                  Writer.Lock.Leave;
                 end;
               except
                 ;
               end;
-            finally
-              Writer.Lock.Leave;
-            end;
           end;
         finally
           FRegisteredLogWriters.UnlockList;
@@ -1438,12 +1460,15 @@ begin
           WriterList := FLog.FRegisteredLogWriters.LockList;
           try
             for Writer in WriterList do
-              try
-                TjachLogWriterThread(Writer.Thread).FEntryQueue.PushItem(AEntry);
-              except
-                //todo: fire error event
-                ;
-              end;
+              if     (Writer.IsActive)
+                 and (Byte(Writer.LogLevel[AEntry.Topic]) > Byte(AEntry.Severity))
+              then
+                try
+                  TjachLogWriterThread(Writer.Thread).FEntryQueue.PushItem(AEntry);
+                except
+                  //todo: fire error event
+                  ;
+                end;
           finally
             FLog.FRegisteredLogWriters.UnlockList;
           end;
