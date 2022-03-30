@@ -275,7 +275,8 @@ type
   end;
 
 function LogSeverityToStr(ALogSeverity: TLogSeverity): string;
-function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string): IjachLogEntry;
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string): IjachLogEntry; overload;
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime): IjachLogEntry; overload;
 
 var
   jachLog: TjachLog;
@@ -306,7 +307,8 @@ type
     function GetSeverity: TLogSeverity;
     function GetTopic: TjachLogTopicIndex;
   public
-    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string);
+    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string); overload;
+    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime); overload;
   end;
 
   TjachLogWriteCoordinatorThread = class(TThread)
@@ -356,6 +358,11 @@ begin
   Result := TLogEntry.Create(ATopic, ASeverity, AIndent, ALogString);
 end;
 
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime): IjachLogEntry; overload;
+begin
+  Result := TLogEntry.Create(ATopic, ASeverity, AIndent, ALogString, AThreadID, ATimeStamp);
+end;
+
 { TLogEntry }
 
 constructor TLogEntry.Create(ATopic: TjachLogTopicIndex;
@@ -368,6 +375,15 @@ begin
   FSeverity := ASeverity;
   FThreadID := GetCurrentThreadId;
   FTopic := ATopic;
+end;
+
+constructor TLogEntry.Create(ATopic: TjachLogTopicIndex;
+  ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID;
+  ATimeStamp: TDateTime);
+begin
+  Create(ATopic, ASeverity, AIndent, ALogString);
+  FThreadID := AThreadID;
+  FTimeStamp := ATimeStamp;
 end;
 
 function TLogEntry.GetIndent: string;

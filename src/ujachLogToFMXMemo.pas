@@ -60,6 +60,10 @@ type
     function GetIsMainThread: Boolean;
     procedure SetMaxLength(const Value: Integer);
     procedure SetDateTimeFormat(const Value: string);
+  private
+    procedure InternalWrite(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
+      const S, AIndentSpaces: string; const AThreadID: TThreadID;
+      const ATimeStamp: TDateTime);
   public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
@@ -149,6 +153,33 @@ begin
   Result := FTimer.Interval;
 end;
 
+procedure TjachLogToFMXMemo.InternalWrite(ATopic: TjachLogTopicIndex;
+  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  const AThreadID: TThreadID; const ATimeStamp: TDateTime);
+var
+  DT, Margin: string;
+  Msgs: TStringDynArray;
+  I, LineLength: Integer;
+begin
+  if not GetIsMainThread then Exit;
+
+  DT := Format('%s %8.8x %-5s %s', [FormatDateTime(FDateTimeFormat, ATimeStamp),
+    AThreadID, LogSeverityToStr(ASeverity), AIndentSpaces]);
+  Margin := StringOfChar(' ', Length(DT) + 1);
+
+  LineLength := FCurrentLineLength - Length(DT);
+
+  if LineLength < 20 then
+    LineLength := 20;
+
+  Msgs := WordWrap(S, LineLength);
+
+  FMemo.Lines.Add(DT + ' ' + Msgs[0]);
+  for I := 1 to High(Msgs) do
+    FMemo.Lines.Add(Margin + Msgs[I]);
+  FMessagesAdded := True;
+end;
+
 procedure TjachLogToFMXMemo.OpenLogChannel;
 begin
   inherited;
@@ -234,7 +265,7 @@ begin
       if Assigned(lEntry) then
       begin
         IsModified := True;
-        Write(lEntry.Topic, lEntry.Severity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
+        InternalWrite(lEntry.Topic, lEntry.Severity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
       end;
     end;
   finally
@@ -247,30 +278,10 @@ end;
 procedure TjachLogToFMXMemo.Write(ATopic: TjachLogTopicIndex;
   ASeverity: TLogSeverity; const S, AIndentSpaces: string;
   const AThreadID: TThreadID; const ATimeStamp: TDateTime);
-
-var
-  DT, Margin: string;
-  Msgs: TStringDynArray;
-  I, LineLength: Integer;
 begin
-  //inherited;
-  if not GetIsMainThread then Exit;
-
-  DT := Format('%s %8.8x %-5s %s', [FormatDateTime(FDateTimeFormat, Now),
-    AThreadID, LogSeverityToStr(ASeverity), AIndentSpaces]);
-  Margin := StringOfChar(' ', Length(DT) + 1);
-
-  LineLength := FCurrentLineLength - Length(DT);
-
-  if LineLength < 20 then
-    LineLength := 20;
-
-  Msgs := WordWrap(S, LineLength);
-
-  FMemo.Lines.Add(DT + ' ' + Msgs[0]);
-  for I := 1 to High(Msgs) do
-    FMemo.Lines.Add(Margin + Msgs[I]);
-  FMessagesAdded := True;
+  case FEntries.PushItem(CreateLogEntry(ATopic, ASeverity, AIndentSpaces, S, AThreadID, ATimeStamp)) of
+    wrSignaled, wrTimeout, wrAbandoned, wrError, wrIOCompletion: ;
+  end;
 end;
 
 procedure TjachLogToFMXMemo.WriteEntry(AEntry: IjachLogEntry);
