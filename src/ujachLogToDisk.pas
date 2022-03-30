@@ -52,12 +52,14 @@ type
     FIsOpen: Boolean;
     FMaxFileSize: UInt64;
     FMaxLineSize: UInt16;
+    FFileCountToKeepInRotation: Integer;
     procedure SetFileNamePrefix(const Value: string);
     procedure SetFileNameSuffix(const Value: string);
     procedure SetBasePath(const Value: string);
     procedure UpdateLogFileName;
     procedure SetMaxFileSize(const Value: UInt64);
     procedure SetMaxLineSize(const Value: UInt16);
+    procedure SetFileCountToKeepInRotation(const Value: Integer);
   public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
@@ -73,6 +75,7 @@ type
     property FileNameSuffix: string read FFileNameSuffix write SetFileNameSuffix;
     property MaxFileSize: UInt64 read FMaxFileSize write SetMaxFileSize;
     property MaxLineSize: UInt16 read FMaxLineSize write SetMaxLineSize;
+    property FileCountToKeepInRotation: Integer read FFileCountToKeepInRotation write SetFileCountToKeepInRotation;
   end;
 
 implementation
@@ -122,6 +125,7 @@ begin
   FMaxLineSize := 255;
   FBasePath := GetDefaultBasePath;
   UpdateLogFileName;
+  FileCountToKeepInRotation := 5;
 end;
 
 destructor TjachLogToDisk.Destroy;
@@ -167,9 +171,10 @@ var
   end;
 
 var
-  FileNames: array[0..5] of string;
+  FileNames: array of string;
   I: Integer;
 begin
+  SetLength(FileNames, FFileCountToKeepInRotation + 1);
   Path := ExtractFilePath(FLogFileName);
   FN := ExtractFileName(FLogFileName);
   Ext := ExtractFileExt(FLogFileName);
@@ -189,6 +194,12 @@ begin
   if TPath.HasValidPathChars(Value.Trim, False) then
     FBasePath := Value.Trim;
   UpdateLogFileName;
+end;
+
+procedure TjachLogToDisk.SetFileCountToKeepInRotation(const Value: Integer);
+begin
+  if (Value > 0) and (Value < 100) then
+    FFileCountToKeepInRotation := Value;
 end;
 
 procedure TjachLogToDisk.SetFileNamePrefix(const Value: string);
