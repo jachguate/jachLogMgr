@@ -140,7 +140,7 @@ type
     property TopicName[Index: TjachLogTopicIndex]: string read GetTopicName write SetTopicName;
     property DefaultTopic: TjachLogTopicIndex read FDefaultTopic write FDefaultTopic;
     property IncludeTopicName: Boolean read FIncludeTopicName write SetIncludeTopicName;
-
+    property IsActive: Boolean read FIsActive write FIsActive;
     property UseSeparateThreadToWrite: Boolean read FUseSeparateThreadToWrite write SetUseSeparateThreadToWrite;
 
     procedure IncIndent;
