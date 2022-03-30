@@ -186,30 +186,35 @@ end;
 
 procedure TjachLogToDisk.SetBasePath(const Value: string);
 begin
-  FBasePath := Value;
+  if TPath.HasValidPathChars(Value.Trim, False) then
+    FBasePath := Value.Trim;
   UpdateLogFileName;
 end;
 
 procedure TjachLogToDisk.SetFileNamePrefix(const Value: string);
 begin
-  FFileNamePrefix := Value;
+  if TPath.HasValidFileNameChars(Value.Trim, False) then
+    FFileNamePrefix := Value.Trim;
   UpdateLogFileName;
 end;
 
 procedure TjachLogToDisk.SetFileNameSuffix(const Value: string);
 begin
-  FFileNameSuffix := Value;
+  if TPath.HasValidFileNameChars(Value.Trim, False) then
+    FFileNameSuffix := Value.Trim;
   UpdateLogFileName;
 end;
 
 procedure TjachLogToDisk.SetMaxFileSize(const Value: UInt64);
 begin
-  FMaxFileSize := Value;
+  if Value > 0 then
+    FMaxFileSize := Value;
 end;
 
 procedure TjachLogToDisk.SetMaxLineSize(const Value: UInt16);
 begin
-  FMaxLineSize := Value;
+  if Value > 0 then
+    FMaxLineSize := Value;
 end;
 
 procedure TjachLogToDisk.UpdateLogFileName;
