@@ -1567,4 +1567,6 @@ end;
 
 initialization
 finalization
+  if Assigned(jachLog) then
+    FreeAndNil(jachLog);
 end.

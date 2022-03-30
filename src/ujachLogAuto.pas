@@ -68,5 +68,4 @@ initialization
     jachLog.RegisterLogWriter(lLogToConsole);
   end;
 finalization
-  jachLog.Free;
 end.
