@@ -66,7 +66,7 @@ type
       const ATimeStamp: TDateTime); override;
     procedure RotateLogs;
   public
-    constructor Create;
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
     property BasePath: string read FBasePath write SetBasePath;
     property FileNamePrefix: string read FFileNamePrefix write SetFileNamePrefix;
@@ -115,9 +115,9 @@ begin
   FIsOpen := False;
 end;
 
-constructor TjachLogToDisk.Create;
+constructor TjachLogToDisk.Create(ADefaultTopicLevel: TLogLevel = llAll);
 begin
-  inherited Create;
+  inherited;
   FMaxFileSize := 20 * 1024 * 1024; //20MB
   FMaxLineSize := 255;
   FBasePath := GetDefaultBasePath;

@@ -77,7 +77,7 @@ type
     const WWMAX_LEN = 255;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
   public
-    constructor Create(ADefaultTopicLevel: TLogLevel = llAll);
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll); virtual;
     destructor Destroy; override;
     procedure OpenLogChannel; virtual;
     procedure CloseLogChannel; virtual;

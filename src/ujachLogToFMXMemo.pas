@@ -68,7 +68,7 @@ type
       const S, AIndentSpaces: string; const AThreadID: TThreadID;
       const ATimeStamp: TDateTime); override;
   public
-    constructor Create;
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
     property Memo: TMemo read FMemo write SeTMemo;
     property RefreshInterval: Cardinal read GetRefreshInterval write SetRefreshInterval;
@@ -105,7 +105,7 @@ end;
 
 constructor TjachLogToFMXMemo.Create;
 begin
-  inherited Create;
+  inherited;
   FEntries := TThreadedQueue<IjachLogEntry>.Create(32768, 0, 0);
   IsActive := False;
   if GetIsMainThread then
@@ -283,5 +283,3 @@ begin
 end;
 
 end.
-
-

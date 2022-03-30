@@ -72,7 +72,7 @@ type
       const S, AIndentSpaces: string; const AThreadID: TThreadID;
       const ATimeStamp: TDateTime); override;
   public
-    constructor Create;
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
     property RichEdit: TRichEdit read FRichEdit write SetRichEdit;
     property RefreshInterval: Cardinal read GetRefreshInterval write SetRefreshInterval;
@@ -113,7 +113,7 @@ end;
 
 constructor TjachLogToVCLRichEdit.Create;
 begin
-  inherited Create;
+  inherited;
   FEntries := TThreadedQueue<IjachLogEntry>.Create(32768, 0, 0);
   IsActive := False;
   if GetIsMainThread then

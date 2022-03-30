@@ -52,7 +52,7 @@ type
       const S, AIndentSpaces: string; const AThreadID: TThreadID;
       const ATimeStamp: TDateTime); override;
   public
-    constructor Create;
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
     property idSysLog: TidSysLog read FIdSysLog;
     property idSysLogMessage: TIdSysLogMessage read FIdSysLogMessage;
@@ -75,7 +75,7 @@ end;
 
 constructor TjachLogToSysLogIndyUDP.Create;
 begin
-  inherited Create;
+  inherited;
   FIdSysLog := TIdSysLog.Create(nil);
   FIdSysLogMessage := TIdSysLogMessage.Create(nil);
 
