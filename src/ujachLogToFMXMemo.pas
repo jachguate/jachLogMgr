@@ -46,7 +46,7 @@ type
     FEntries: TThreadedQueue<IjachLogEntry>;
     FMemo: TMemo;
     FTimer: TTimer;
-    FMaxLength: Integer;
+    FMaxLineSize: Integer;
     FCurrentLineLength: Integer;
     FDateTimeFormat: string;
     FMessagesAdded: Boolean;
@@ -58,7 +58,7 @@ type
     procedure FreeTimer;
     procedure ActivateTimer;
     function GetIsMainThread: Boolean;
-    procedure SetMaxLength(const Value: Integer);
+    procedure SetMaxLineSize(const Value: Integer);
     procedure SetDateTimeFormat(const Value: string);
   private
     procedure InternalWrite(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
@@ -76,7 +76,7 @@ type
     destructor Destroy; override;
     property Memo: TMemo read FMemo write SeTMemo;
     property RefreshInterval: Cardinal read GetRefreshInterval write SetRefreshInterval;
-    property MaxLength: Integer read FMaxLength write SetMaxLength;
+    property MaxLineSize: Integer read FMaxLineSize write SetMaxLineSize;
     property DateTimeFormat: string read FDateTimeFormat write SetDateTimeFormat;
   end;
 
@@ -117,7 +117,7 @@ begin
   else
     TThread.Synchronize(TThread.Current, CreateTimer);
   FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss:zzz';
-  FMaxLength := -1;
+  FMaxLineSize := -1;
 end;
 
 procedure TjachLogToFMXMemo.CreateTimer;
@@ -195,10 +195,10 @@ begin
   FDateTimeFormat := Value;
 end;
 
-procedure TjachLogToFMXMemo.SetMaxLength(const Value: Integer);
+procedure TjachLogToFMXMemo.SetMaxLineSize(const Value: Integer);
 begin
-  FMaxLength := Value;
-  FCurrentLineLength := FMaxLength;
+  FMaxLineSize := Value;
+  FCurrentLineLength := FMaxLineSize;
 end;
 
 procedure TjachLogToFMXMemo.SetRefreshInterval(const Value: Cardinal);
@@ -254,7 +254,7 @@ begin
   if not Assigned(FMemo) then
     Exit;
 
-  if FMaxLength = -1 then
+  if FMaxLineSize = -1 then
     CalculateCurrentLength;
 
   FMemo.Lines.BeginUpdate;
