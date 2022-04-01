@@ -698,16 +698,16 @@ begin
     Exit;
 
   if Byte(FLogLevel[ATopic]) > Byte(ALogSeverity) then
-    if FUseSeparateThreadToWrite then
-      if FIncludeTopicName then
-        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, '[' + FTopicName[ATopic] + ']' + S))
-      else
-        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, S))
-    else if FIsCached then
+    if FIsCached then
       if FIncludeTopicName then
         CacheLog(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S)
       else
         CacheLog(ATopic, ALogSeverity, S)
+    else if FUseSeparateThreadToWrite then
+      if FIncludeTopicName then
+        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, '[' + FTopicName[ATopic] + ']' + S))
+      else
+        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, S))
     else
     begin
       lRegisteredLogWriters := FRegisteredLogWriters.LockList;
@@ -1363,26 +1363,16 @@ begin
 end;
 
 procedure TjachLog.WriteCachedLog;
-var
-  SavedIndentSpaces: string;
-  LogEntry: IjachLogEntry;
-  lRegisteredLogWriters: TList<TjachLogWriter>;
-  Writer: TjachLogWriter;
-begin
-  if not FIsActive then
+  procedure WriteDirect;
+  var
+    SavedIndentSpaces: string;
+    lRegisteredLogWriters: TList<TjachLogWriter>;
+    Writer: TjachLogWriter;
+    LogEntry: IjachLogEntry;
   begin
-    FCacheCS.Enter;
+    SavedIndentSpaces := FIndentSpaces;
     try
-      FCache.EntryList.Clear;
-    finally
-      FCacheCS.Leave;
-    end;
-    Exit;
-  end;
-  SavedIndentSpaces := FIndentSpaces;
-  try
-    FIndentSpaces := '';
-    try
+      FIndentSpaces := '';
       FCacheCS.Enter;
       try
         lRegisteredLogWriters := FRegisteredLogWriters.LockList;
@@ -1413,19 +1403,52 @@ begin
         finally
           FRegisteredLogWriters.UnlockList;
         end;
+        FCache.EntryList.Clear;
       finally
         FCacheCS.Leave;
       end;
-    except
-      on E:Exception do
-      begin
-        FIndentSpaces := '';
-        LogError('Cached LOG Write Error', E);
-      end;
+    finally
+      FIndentSpaces := SavedIndentSpaces;
     end;
-  finally
-    FIndentSpaces := SavedIndentSpaces;
-    FCache.EntryList.Clear;
+  end;
+
+  procedure WriteToCoordinator;
+  var
+    LogEntry: IjachLogEntry;
+  begin
+    FCacheCS.Enter;
+    try
+      TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (0, lsInfo, '', 'Cached LOG Write BEGIN ********************'));
+      for LogEntry in FCache.EntryList do
+        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(LogEntry);
+      TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (0, lsInfo, '', 'Cached LOG Write END ********************'));
+      FCache.EntryList.Clear;
+    finally
+      FCacheCS.Leave;
+    end;
+  end;
+begin
+  if not FIsActive then
+  begin
+    FCacheCS.Enter;
+    try
+      FCache.EntryList.Clear;
+    finally
+      FCacheCS.Leave;
+    end;
+    Exit;
+  end;
+  try
+    if FUseSeparateThreadToWrite then
+      WriteToCoordinator
+    else
+      WriteDirect;
+  except
+    on E:Exception do
+    begin
+      FIndentSpaces := '';
+      LogError('Cached LOG Write Error', E);
+    end;
   end;
 end;
 
