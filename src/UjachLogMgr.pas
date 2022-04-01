@@ -1468,6 +1468,7 @@ var
   WriterList: TList<TjachLogWriter>;
   Writer: TjachLogWriter;
 begin
+  {$ifdef debug}NameThreadForDebugging('Log coordinator thread');{$endif}
   while not Terminated do
   begin
     case FEntryQueue.PopItem(AEntry) of
@@ -1547,6 +1548,7 @@ end;
 procedure TjachLogWriterThread.Execute;
 begin
   inherited;
+  {$ifdef debug}NameThreadForDebugging(FWriter.ClassName + ' writer thread');{$endif}
   while not Terminated do
   begin
     if     (not FEntryQueue.ShutDown)
