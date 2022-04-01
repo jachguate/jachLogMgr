@@ -1,0 +1,179 @@
+inherited fraWriterToDiskConfig: TfraWriterToDiskConfig
+  Size.Height = 136.000000000000000000
+  inherited FlowLayout1: TFlowLayout
+    Size.Height = 111.000000000000000000
+    object pnlPath: TPanel
+      Position.Y = 22.000000000000000000
+      Size.Width = 480.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object lblPath: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Path'
+        TabOrder = 0
+      end
+      object edtPath: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 380.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtPathValidate
+      end
+      object btnPathVisit: TButton
+        Align = Right
+        Position.X = 460.000000000000000000
+        Size.Width = 20.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        TabStop = False
+        Text = '...'
+        OnClick = btnPathVisitClick
+      end
+    end
+    object pnlPrefix: TPanel
+      Position.Y = 44.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object lblPrefix: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Prefix'
+        TabOrder = 0
+      end
+      object edtPrefix: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtPrefixValidate
+      end
+    end
+    object pnlSuffix: TPanel
+      Position.X = 160.000000000000000000
+      Position.Y = 44.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      object lblSufix: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Suffix'
+        TabOrder = 0
+      end
+      object edtSuffix: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtSuffixValidate
+      end
+    end
+    object pnlMaxFileSize: TPanel
+      Position.X = 320.000000000000000000
+      Position.Y = 44.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      object lblMaxFileSize: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Max file size'
+        TabOrder = 0
+      end
+      object edtMaxFileSize: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtMaxFileSizeValidate
+      end
+    end
+    object pnlMaxLineSize: TPanel
+      Position.Y = 66.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 5
+      object lblMaxLineSize: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Max line size'
+        TabOrder = 0
+      end
+      object edtMaxLineSize: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtMaxLineSizeValidate
+      end
+    end
+    object pnlFileCountToKeepInRotation: TPanel
+      Position.X = 160.000000000000000000
+      Position.Y = 66.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 6
+      object lblFileCountToKeepInRotation: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Files to keep'
+        TabOrder = 0
+      end
+      object edtFileCountToKeepInRotation: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtFileCountToKeepInRotationValidate
+      end
+    end
+  end
+  inherited lblWriterName: TLabel
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
+  end
+end

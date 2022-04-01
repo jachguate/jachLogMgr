@@ -1,0 +1,61 @@
+object fraWriterConfig: TfraWriterConfig
+  Size.Width = 498.000000000000000000
+  Size.Height = 49.000000000000000000
+  Size.PlatformDefault = False
+  object FlowLayout1: TFlowLayout
+    Align = Client
+    Size.Width = 498.000000000000000000
+    Size.Height = 24.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Justify = Left
+    JustifyLastLine = Left
+    FlowDirection = LeftToRight
+    object pnlIsActive: TPanel
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object lblIsActive: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Is active'
+        TabOrder = 0
+      end
+      object swActive: TSwitch
+        Align = Right
+        IsChecked = False
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnClick = swActiveClick
+      end
+    end
+  end
+  object lblWriterName: TLabel
+    Align = Top
+    StyledSettings = [Family, Size, FontColor]
+    Size.Width = 498.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
+    TextSettings.HorzAlign = Center
+    Text = 'Writer name'
+    TabOrder = 1
+    object btnDestroyWriter: TButton
+      Align = Right
+      Position.X = 456.000000000000000000
+      Size.Width = 42.000000000000000000
+      Size.Height = 25.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'x'
+      OnClick = btnDestroyWriterClick
+    end
+  end
+end

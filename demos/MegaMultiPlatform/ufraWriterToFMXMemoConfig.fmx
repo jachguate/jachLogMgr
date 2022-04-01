@@ -1,0 +1,87 @@
+inherited fraWriterToFMXMemoConfig: TfraWriterToFMXMemoConfig
+  Size.Height = 82.000000000000000000
+  inherited FlowLayout1: TFlowLayout
+    Size.Height = 57.000000000000000000
+    object pnlRefreshInterval: TPanel
+      Position.X = 160.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object lblRefreshInterval: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Refresh (ms)'
+        TabOrder = 0
+      end
+      object edtRefreshInterval: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtRefreshIntervalValidate
+      end
+    end
+    object pnlMaxLineSize: TPanel
+      Position.X = 320.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object lblMaxLineSize: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Max line size'
+        TabOrder = 0
+      end
+      object edtMaxLineSize: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtMaxLineSizeValidate
+      end
+    end
+    object pnlDateTimeFormat: TPanel
+      Position.Y = 22.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      object lblDateTimeFormat: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Date format'
+        TabOrder = 0
+      end
+      object edtDateTimeFormat: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtDateTimeFormatValidate
+      end
+    end
+  end
+  inherited lblWriterName: TLabel
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
+  end
+end

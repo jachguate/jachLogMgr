@@ -1,0 +1,457 @@
+object frmMain: TfrmMain
+  Left = 0
+  Top = 0
+  Caption = 'jachLog MegaDemo'
+  ClientHeight = 591
+  ClientWidth = 768
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnClose = FormClose
+  OnResize = FormResize
+  DesignerMasterStyle = 0
+  object pnlContent: TPanel
+    Position.X = 220.000000000000000000
+    Size.Width = 743.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object Panel2: TPanel
+      Align = Top
+      Size.Width = 743.000000000000000000
+      Size.Height = 41.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object SpeedButton1: TSpeedButton
+        Position.X = 4.000000000000000000
+        Position.Y = 3.000000000000000000
+        Size.Width = 42.000000000000000000
+        Size.Height = 33.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = 'detailstoolbutton'
+        Text = 'SpeedButton1'
+      end
+    end
+    object tabcGeneral: TTabControl
+      Align = Client
+      Size.Width = 743.000000000000000000
+      Size.Height = 439.000000000000000000
+      Size.PlatformDefault = False
+      TabHeight = 49.000000000000000000
+      TabIndex = 1
+      TabOrder = 1
+      TabPosition = PlatformDefault
+      Sizes = (
+        743s
+        390s
+        743s
+        390s
+        743s
+        390s
+        743s
+        390s)
+      object tiLogGenerator: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = False
+        Size.Width = 89.000000000000000000
+        Size.Height = 49.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Generate log'
+        ExplicitSize.cx = 89.000000000000000000
+        ExplicitSize.cy = 49.000000000000000000
+        object lvwGenerators: TListView
+          ItemAppearanceClassName = 'TDynamicAppearance'
+          ItemEditAppearanceClassName = 'TDynamicAppearance'
+          HeaderAppearanceClassName = 'TListHeaderObjects'
+          FooterAppearanceClassName = 'TListHeaderObjects'
+          ItemIndex = 1
+          Align = Client
+          Size.Width = 743.000000000000000000
+          Size.Height = 390.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          ItemAppearance.ItemHeight = 75
+          ItemAppearanceObjects.ItemObjects.ObjectsCollection = <
+            item
+              AppearanceObjectName = 'Title'
+              AppearanceClassName = 'TTextObjectAppearance'
+              Appearance.Font.StyleExt = {00070000000000000004000000}
+              Appearance.TextVertAlign = Leading
+              Appearance.Width = 719.000000000000000000
+              Appearance.Height = 15.000000000000000000
+              Appearance.Align = Center
+            end
+            item
+              AppearanceObjectName = 'Description'
+              AppearanceClassName = 'TTextObjectAppearance'
+              Appearance.TextAlign = Leading
+              Appearance.TextVertAlign = Leading
+              Appearance.WordWrap = True
+              Appearance.Width = 722.000000000000000000
+              Appearance.Height = 60.000000000000000000
+              Appearance.VertAlign = Trailing
+            end>
+          ItemAppearanceObjects.ItemEditObjects.ObjectsCollection = <
+            item
+              AppearanceObjectName = 'Text1'
+              AppearanceClassName = 'TTextObjectAppearance'
+            end>
+          CanSwipeDelete = False
+          OnItemClick = lvwGeneratorsItemClick
+        end
+      end
+      object tiLogConfig: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = True
+        Size.Width = 114.000000000000000000
+        Size.Height = 49.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Log configuration'
+        ExplicitSize.cx = 247.000000000000000000
+        ExplicitSize.cy = 49.000000000000000000
+        object swIsActive: TSwitch
+          IsChecked = False
+          Position.X = 152.000000000000000000
+          Position.Y = 15.000000000000000000
+          TabOrder = 2
+          OnSwitch = swIsActiveSwitch
+        end
+        object Label1: TLabel
+          Position.X = 16.000000000000000000
+          Position.Y = 15.000000000000000000
+          Size.Width = 120.000000000000000000
+          Size.Height = 27.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Is log active'
+          TabOrder = 3
+        end
+        object Label2: TLabel
+          Position.X = 16.000000000000000000
+          Position.Y = 42.000000000000000000
+          Size.Width = 120.000000000000000000
+          Size.Height = 27.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Cached log'
+          TabOrder = 4
+        end
+        object lblWriteInAuxThreads: TLabel
+          Position.X = 16.000000000000000000
+          Position.Y = 69.000000000000000000
+          Size.Width = 120.000000000000000000
+          Size.Height = 27.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Write in aux. threads'
+          TabOrder = 5
+        end
+        object swIsCached: TSwitch
+          IsChecked = False
+          Position.X = 152.000000000000000000
+          Position.Y = 42.000000000000000000
+          TabOrder = 1
+          OnSwitch = swIsCachedSwitch
+        end
+        object swUseSeparateThreadToWrite: TSwitch
+          IsChecked = False
+          Position.X = 152.000000000000000000
+          Position.Y = 69.000000000000000000
+          TabOrder = 0
+          OnSwitch = swUseSeparateThreadToWriteSwitch
+        end
+      end
+      object tiWriters: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = False
+        Size.Width = 58.000000000000000000
+        Size.Height = 49.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Writers'
+        ExplicitSize.cx = 247.000000000000000000
+        ExplicitSize.cy = 49.000000000000000000
+        object pnlWriters: TVertScrollBox
+          Align = Client
+          Size.Width = 743.000000000000000000
+          Size.Height = 390.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          Viewport.Width = 743.000000000000000000
+          Viewport.Height = 390.000000000000000000
+        end
+      end
+      object tiLog: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = False
+        Size.Width = 40.000000000000000000
+        Size.Height = 49.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'Log'
+        ExplicitSize.cx = 40.000000000000000000
+        ExplicitSize.cy = 49.000000000000000000
+        object memoLog: TMemo
+          Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+          DataDetectorTypes = []
+          ReadOnly = True
+          StyledSettings = [Size, Style, FontColor]
+          TextSettings.Font.Family = 'Courier New'
+          Align = Client
+          Size.Width = 743.000000000000000000
+          Size.Height = 368.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          Viewport.Width = 739.000000000000000000
+          Viewport.Height = 364.000000000000000000
+        end
+        object btnClearLog: TSpeedButton
+          Align = Top
+          Size.Width = 743.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Clear'
+          OnClick = btnClearLogClick
+        end
+      end
+    end
+  end
+  object tmrRemoveWriter: TTimer
+    Enabled = False
+    Interval = 20
+    OnTimer = tmrRemoveWriterTimer
+    Left = 320
+    Top = 264
+  end
+  object tmrAdjustAllFramesHeight: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrAdjustAllFramesHeightTimer
+    Left = 32
+    Top = 328
+  end
+  object MultiView1: TMultiView
+    MasterButton = SpeedButton1
+    NavigationPaneOptions.CollapsedWidth = 220.000000000000000000
+    Size.Width = 250.000000000000000000
+    Size.Height = 50.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object toolNavPane: TToolBar
+      Size.Width = 220.000000000000000000
+      Size.Height = 40.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object lblTitle: TLabel
+        Align = Center
+        StyledSettings = [Family, Size, FontColor]
+        Size.Width = 120.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.HorzAlign = Center
+        TextSettings.VertAlign = Leading
+        Text = 'Available writers'
+        TabOrder = 0
+      end
+      object lblTapTheWriter: TLabel
+        Align = Bottom
+        Position.Y = 23.000000000000000000
+        Size.Width = 220.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.HorzAlign = Center
+        Text = 'Tap the writer to add it'
+        TabOrder = 1
+      end
+    end
+    object lvwAvailableWriters: TListView
+      ItemAppearanceClassName = 'TListItemAppearance'
+      ItemEditAppearanceClassName = 'TListItemShowCheckAppearance'
+      HeaderAppearanceClassName = 'TListHeaderObjects'
+      FooterAppearanceClassName = 'TListHeaderObjects'
+      ItemIndex = 0
+      Align = Client
+      Size.Width = 220.000000000000000000
+      Size.Height = 551.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      CanSwipeDelete = False
+      OnItemClickEx = lvwAvailableWritersItemClickEx
+    end
+  end
+  object memGenerators: TFDMemTable
+    Active = True
+    FieldDefs = <
+      item
+        Name = 'ID'
+        DataType = ftInteger
+      end
+      item
+        Name = 'Category'
+        DataType = ftString
+        Size = 50
+      end
+      item
+        Name = 'Name'
+        DataType = ftString
+        Size = 400
+      end
+      item
+        Name = 'Help'
+        DataType = ftString
+        Size = 5000
+      end>
+    IndexDefs = <>
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvPersistent, rvSilentMode]
+    ResourceOptions.Persistent = True
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    StoreDefs = True
+    Left = 324
+    Top = 313
+    Content = {
+      414442530F000B6B49030000FF00010001FF02FF0304001A0000006D0065006D
+      00470065006E0065007200610074006F007200730005000A0000005400610062
+      006C006500060000000000070000080032000000090000FF0AFF0B0400040000
+      0049004400050004000000490044000C00010000000E000D000F000110000111
+      000112000113000114000115000400000049004400FEFF0B0400100000004300
+      61007400650067006F0072007900050010000000430061007400650067006F00
+      720079000C00020000000E0016001700320000000F0001100001110001120001
+      130001140001150010000000430061007400650067006F007200790018003200
+      0000FEFF0B0400080000004E0061006D0065000500080000004E0061006D0065
+      000C00030000000E0016001700900100000F0001100001110001120001130001
+      1400011500080000004E0061006D006500180090010000FEFF0B040008000000
+      480065006C007000050008000000480065006C0070000C00040000000E001600
+      1700881300000F00011000011900011100011200011300011400011500080000
+      00480065006C007000180088130000FEFEFF1AFEFF1BFEFF1CFF1D1E00000000
+      00FF1F00000100000001000500000042617369630200140000004C6F67206672
+      6F6D206D61696E2074687265616403004C000000577269746573206120736572
+      696573206F66206C6F6720656E74726965732066726F6D20746865206D61696E
+      20746872656164207573696E6720616C6C207468652063617465676F72696573
+      FEFEFF1D1E0001000000FF1F00006500000001000B000000506572666F726D61
+      6E636502001E000000313030303020656E74726965732066726F6D206D61696E
+      207468726561640300A700000057726974657320313030303020656E74726965
+      732066726F6D20746865206D61696E207468726561642E20436F6D7061726520
+      7468652074696D652069742074616B6573207769746820746865206361636865
+      20696E616374697665207673206361636865206163746976652C20616E642077
+      726974696E6720696E2061757820746872656164732076732077726974696E67
+      20696E20746865206D61696E207468726561642EFEFEFEFEFEFF20FEFF212200
+      02000000FF23FEFEFE0E004D0061006E0061006700650072001E005500700064
+      0061007400650073005200650067006900730074007200790012005400610062
+      006C0065004C006900730074000A005400610062006C00650008004E0061006D
+      006500140053006F0075007200630065004E0061006D0065000A005400610062
+      0049004400240045006E0066006F0072006300650043006F006E007300740072
+      00610069006E00740073001E004D0069006E0069006D0075006D004300610070
+      0061006300690074007900180043006800650063006B004E006F0074004E0075
+      006C006C00140043006F006C0075006D006E004C006900730074000C0043006F
+      006C0075006D006E00100053006F007500720063006500490044000E00640074
+      0049006E00740033003200100044006100740061005400790070006500140053
+      0065006100720063006800610062006C006500120041006C006C006F0077004E
+      0075006C006C000800420061007300650014004F0041006C006C006F0077004E
+      0075006C006C0012004F0049006E0055007000640061007400650010004F0049
+      006E00570068006500720065001A004F0072006900670069006E0043006F006C
+      004E0061006D00650018006400740041006E007300690053007400720069006E
+      0067000800530069007A006500140053006F007500720063006500530069007A
+      006500100042006C006F00620044006100740061001C0043006F006E00730074
+      007200610069006E0074004C00690073007400100056006900650077004C0069
+      00730074000E0052006F0077004C00690073007400060052006F0077000A0052
+      006F0077004900440010004F0072006900670069006E0061006C001800520065
+      006C006100740069006F006E004C006900730074001C00550070006400610074
+      00650073004A006F00750072006E0061006C001200530061007600650050006F
+      0069006E0074000E004300680061006E00670065007300}
+    object memGeneratorsID: TIntegerField
+      FieldName = 'ID'
+    end
+    object memGeneratorsCategory: TStringField
+      FieldName = 'Category'
+      Size = 50
+    end
+    object memGeneratorsName: TStringField
+      FieldName = 'Name'
+      Size = 400
+    end
+    object memGeneratorsHelp: TStringField
+      FieldName = 'Help'
+      Size = 5000
+    end
+  end
+  object bsrcGenerators: TBindSourceDB
+    DataSet = memGenerators
+    ScopeMappings = <>
+    Left = 424
+    Top = 264
+  end
+  object BindingsList1: TBindingsList
+    Methods = <>
+    OutputConverters = <>
+    Left = 28
+    Top = 277
+    object LinkListControlToField1: TLinkListControlToField
+      Category = 'Quick Bindings'
+      DataSource = bsrcGenerators
+      FieldName = 'Name'
+      Control = lvwGenerators
+      FillExpressions = <
+        item
+          SourceMemberName = 'Help'
+          ControlMemberName = 'Description'
+        end
+        item
+          SourceMemberName = 'Name'
+          ControlMemberName = 'Title'
+        end>
+      FillHeaderExpressions = <>
+      FillHeaderFieldName = 'Category'
+      FillBreakGroups = <>
+    end
+    object LinkListControlToField2: TLinkListControlToField
+      Category = 'Quick Bindings'
+      DataSource = absrcAvailableWriters
+      FieldName = 'Name'
+      Control = lvwAvailableWriters
+      FillExpressions = <>
+      FillHeaderExpressions = <>
+      FillBreakGroups = <>
+    end
+  end
+  object absrcAvailableWriters: TAdapterBindSource
+    AutoActivate = True
+    OnCreateAdapter = absrcAvailableWritersCreateAdapter
+    Adapter = datAdapterAvailableWriters
+    ScopeMappings = <>
+    Left = 536
+    Top = 416
+  end
+  object datAdapterAvailableWriters: TDataGeneratorAdapter
+    FieldDefs = <
+      item
+        Name = 'Name'
+        Generator = 'LoremIpsum'
+        ReadOnly = False
+      end>
+    Active = True
+    AutoEdit = False
+    AutoPost = True
+    RecordCount = 4
+    Options = [loptAllowApplyUpdates, loptAllowCancelUpdates]
+    Left = 364
+    Top = 418
+  end
+end

@@ -1,0 +1,144 @@
+inherited fraWriterToSysLogIndyUDPConfig: TfraWriterToSysLogIndyUDPConfig
+  Size.Height = 88.000000000000000000
+  inherited FlowLayout1: TFlowLayout
+    Size.Height = 63.000000000000000000
+    object pnlHost: TPanel
+      Position.X = 160.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object lblHost: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Host'
+        TabOrder = 0
+      end
+      object edtHost: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtHostValidate
+      end
+    end
+    object pnlPort: TPanel
+      Position.X = 320.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object lblPort: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Port'
+        TabOrder = 0
+      end
+      object edtPort: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        OnValidate = edtPortValidate
+      end
+    end
+    object pnlIPVersion: TPanel
+      Position.Y = 22.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      object lblIPVersion: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'IPVersion'
+        TabOrder = 0
+      end
+      object cbxIPVersion: TComboBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        Items.Strings = (
+          'IPv4'
+          'IPv6')
+        ItemIndex = 0
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        OnChange = cbxIPVersionChange
+      end
+    end
+    object pnlFacility: TPanel
+      Position.X = 160.000000000000000000
+      Position.Y = 22.000000000000000000
+      Size.Width = 160.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      object lblFacility: TLabel
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Size.Width = 76.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Facility'
+        TabOrder = 0
+      end
+      object cbxFacility: TComboBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        Items.Strings = (
+          'sfKernel'
+          'sfUserLevel'
+          'sfMailSystem'
+          'sfSystemDaemon'
+          'sfSecurityOne'
+          'sfSysLogInternal'
+          'sfLPR'
+          'sfNNTP'
+          'sfUUCP'
+          'sfClockDaemonOne'
+          'sfSecurityTwo'
+          'sfFTPDaemon'
+          'sfNTP'
+          'sfLogAudit'
+          'sfLogAlert'
+          'sfClockDaemonTwo'
+          'sfLocalUseZero'
+          'sfLocalUseOne'
+          'sfLocalUseTwo'
+          'sfLocalUseThree'
+          'sfLocalUseFour'
+          'sfLocalUseFive'
+          'sfLocalUseSix'
+          'sfLocalUseSeven')
+        ItemIndex = 0
+        Position.X = 80.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        OnChange = cbxFacilityChange
+      end
+    end
+  end
+  inherited lblWriterName: TLabel
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
+  end
+end
