@@ -1497,10 +1497,12 @@ begin
     case FEntryQueue.PopItem(AEntry) of
       wrSignaled:
         begin
+          if Terminated then Exit;
           WriterList := FLog.FRegisteredLogWriters.LockList;
           try
             for Writer in WriterList do
-              if     (Writer.IsActive)
+              if     (not Terminated)
+                 and (Writer.IsActive)
                  and (Byte(Writer.LogLevel[AEntry.Topic]) > Byte(AEntry.Severity))
               then
                 try
