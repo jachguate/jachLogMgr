@@ -30,6 +30,9 @@
         <Projects Include="Features\MultiThreadedAppCache\MultiThreadedCacheDemo.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="MegaMultiPlatform\jachLogMegaDemo.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -119,14 +122,23 @@
     <Target Name="MultiThreadedCacheDemo:Make">
         <MSBuild Projects="Features\MultiThreadedAppCache\MultiThreadedCacheDemo.dproj" Targets="Make"/>
     </Target>
+    <Target Name="jachLogMegaDemo">
+        <MSBuild Projects="MegaMultiPlatform\jachLogMegaDemo.dproj"/>
+    </Target>
+    <Target Name="jachLogMegaDemo:Clean">
+        <MSBuild Projects="MegaMultiPlatform\jachLogMegaDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="jachLogMegaDemo:Make">
+        <MSBuild Projects="MegaMultiPlatform\jachLogMegaDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="VCLDesktopDemo;FMXDesktopGUIDemo;BasicConsoleDemo;jachLogServiceDemo;VCLDesktopGUIDemo;LevelFilterDemo;TopicAndLevelsDemo;MultiThreadedDemo;MultiThreadedCacheDemo"/>
+        <CallTarget Targets="VCLDesktopDemo;FMXDesktopGUIDemo;BasicConsoleDemo;jachLogServiceDemo;VCLDesktopGUIDemo;LevelFilterDemo;TopicAndLevelsDemo;MultiThreadedDemo;MultiThreadedCacheDemo;jachLogMegaDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="VCLDesktopDemo:Clean;FMXDesktopGUIDemo:Clean;BasicConsoleDemo:Clean;jachLogServiceDemo:Clean;VCLDesktopGUIDemo:Clean;LevelFilterDemo:Clean;TopicAndLevelsDemo:Clean;MultiThreadedDemo:Clean;MultiThreadedCacheDemo:Clean"/>
+        <CallTarget Targets="VCLDesktopDemo:Clean;FMXDesktopGUIDemo:Clean;BasicConsoleDemo:Clean;jachLogServiceDemo:Clean;VCLDesktopGUIDemo:Clean;LevelFilterDemo:Clean;TopicAndLevelsDemo:Clean;MultiThreadedDemo:Clean;MultiThreadedCacheDemo:Clean;jachLogMegaDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="VCLDesktopDemo:Make;FMXDesktopGUIDemo:Make;BasicConsoleDemo:Make;jachLogServiceDemo:Make;VCLDesktopGUIDemo:Make;LevelFilterDemo:Make;TopicAndLevelsDemo:Make;MultiThreadedDemo:Make;MultiThreadedCacheDemo:Make"/>
+        <CallTarget Targets="VCLDesktopDemo:Make;FMXDesktopGUIDemo:Make;BasicConsoleDemo:Make;jachLogServiceDemo:Make;VCLDesktopGUIDemo:Make;LevelFilterDemo:Make;TopicAndLevelsDemo:Make;MultiThreadedDemo:Make;MultiThreadedCacheDemo:Make;jachLogMegaDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
