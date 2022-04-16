@@ -272,10 +272,20 @@ end;
 
 destructor TfrmMain.Destroy;
 begin
-  FAvailableWriters.Free;;
+  while FAvailableWriters.Count <> 0 do
+  begin
+    FAvailableWriters[0].Free;
+    FAvailableWriters.Remove(FAvailableWriters[0]);
+  end;
+  while FCreatedWriters.Count <> 0 do
+  begin
+    FCreatedWriters[0].Free;
+    FCreatedWriters.Remove(FCreatedWriters[0]);
+  end;
+  FAvailableWriters.Free;
   FCreatedWriters.Free;
   FToRemoveWriters.Free;
-  //todo: check ownership of objects
+  FActiveContinuousThreads.Free;
   inherited;
 end;
 

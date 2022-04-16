@@ -1,6 +1,9 @@
 program jachLogMegaDemo;
 
 uses
+  {$ifdef FullDebugMode}
+  FastMM4,
+  {$endif}
   System.StartUpCopy,
   FMX.Forms,
   System.SysUtils,
