@@ -87,7 +87,7 @@ implementation
 
 uses
   System.Types, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  Winapi.Windows;
+  Winapi.Windows, Winapi.Messages;
 
 { TjachLogToVCLRichEdit }
 
@@ -277,24 +277,28 @@ begin
   if FMaxLength = -1 then
     CalculateCurrentLength;
 
-  FRichEdit.Lines.BeginUpdate;
-  try
-    while FEntries.TotalItemsPushed > FEntries.TotalItemsPopped do
-    begin
-      lEntry := FEntries.PopItem;
-      if Assigned(lEntry) then
-      begin
-        IsModified := True;
-        Write(lEntry.Topic, lEntry.Severity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
-      end;
-    end;
-  finally
-    FRichEdit.Lines.EndUpdate;
-  end;
-  if IsModified then
+  if FEntries.QueueSize > 0 then
   begin
-    FRichEdit.CaretPos := Point(0, FRichEdit.Lines.Count - 1);
-    FRichEdit.Update;
+    FRichEdit.Lines.BeginUpdate;
+    try
+      while FEntries.QueueSize > 0 do
+      begin
+        lEntry := FEntries.PopItem;
+        if Assigned(lEntry) then
+        begin
+          IsModified := True;
+          Write(lEntry.Topic, lEntry.Severity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
+        end;
+      end;
+    finally
+      FRichEdit.Lines.EndUpdate;
+    end;
+    if IsModified then
+    begin
+      RichEdit.SelStart := RichEdit.GetTextLen;
+      RichEdit.Perform(EM_SCROLLCARET, 0, 0);
+      FRichEdit.Update;
+    end;
   end;
   //AdjustToTheEnd;
 end;
