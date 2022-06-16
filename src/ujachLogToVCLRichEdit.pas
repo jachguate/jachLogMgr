@@ -319,7 +319,7 @@ begin
   FRichEdit.SelAttributes.Color := FFontColor[ASeverity];
   FRichEdit.SelAttributes.Style := FFontStyle[ASeverity];
 
-  DT := Format('%s %8.8x %-5s %s', [FormatDateTime(FDateTimeFormat, Now),
+  DT := Format('%s %8.8x %-5s %s', [FormatDateTime(FDateTimeFormat, ATimeStamp),
     AThreadID, LogSeverityToStr(ASeverity), AIndentSpaces]);
   Margin := StringOfChar(' ', Length(DT));
 
