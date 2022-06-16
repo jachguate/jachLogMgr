@@ -259,7 +259,7 @@ begin
 
   FMemo.Lines.BeginUpdate;
   try
-    while FEntries.TotalItemsPushed > FEntries.TotalItemsPopped do
+    while FEntries.QueueSize > 0 do
     begin
       lEntry := FEntries.PopItem;
       if Assigned(lEntry) then

@@ -1577,7 +1577,7 @@ begin
   while not Terminated do
   begin
     if     (not FEntryQueue.ShutDown)
-       and (FEntryQueue.TotalItemsPushed > FEntryQueue.TotalItemsPopped) then
+       and (FEntryQueue.QueueSize > 0) then
     begin
       FWriter.GetLock.Enter;
       try
@@ -1585,7 +1585,7 @@ begin
         try
           while     (not Terminated)
                 and (not FEntryQueue.ShutDown)
-                and (FEntryQueue.TotalItemsPushed > FEntryQueue.TotalItemsPopped) do
+                and (FEntryQueue.QueueSize > 0) do
           begin
             FWriter.WriteEntry(FEntryQueue.PopItem);
           end;
