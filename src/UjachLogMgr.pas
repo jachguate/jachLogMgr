@@ -32,6 +32,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
 
+{
+Use the following symbols to tune the logging class interface
+If your project doesn't want any call with a explicit topic, undefine
+the AllowCallsWithoutTopic symbol.
+
+If you have a large codebase, during the transition you can maintain
+the AllowCallsWithoutTopic defined, and also define DeprecateCallsWithoutTopic
+so the compiler will emit a warning at every place you issue a call
+without a excplicit topic.
+
+When you're done transitioning you can undefine the AllowCallsWithoutTopic symbo.
+
+On the other hand, if your project is small and there's no topics at all,
+and you don't want to see too much options in the code completion,
+you can undefine the AllowCallsWithTopic symbol, so you will only keep
+the simplest calls available.
+}
+{$define AllowCallsWithoutTopic}
+{.$define DeprecateCallsWithoutTopic}
+{$define AllowCallsWithTopic}
 unit ujachLogMgr;
 
 interface
@@ -39,6 +59,14 @@ interface
 uses Classes, System.SysUtils, System.Types, System.SyncObjs,
   System.Generics.Collections;
 
+//adjust your symbols before the unit declaration, do not touch this part
+{$ifndef AllowCallsWithTopic}
+  {$undef DeprecateCallsWithoutTopic}
+{$endif}
+
+{$if not defined(AllowCallsWithoutTopic) and not defined(AllowCallsWithTopic)}
+  {$define AllowCallsWithoutTopic}
+{$ifend}
 type
   TjachLogTopicIndex = 0..63;
 
@@ -131,6 +159,9 @@ type
     procedure SetUseSeparateThreadToWrite(const Value: Boolean);
     procedure FreeRegisteredLogWriters;
     procedure TerminateCoordinatorThread;
+    procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); overload;
+    procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; E: Exception); overload; inline;
+    procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception); overload; inline;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llInfo; ADefaultTopic: TjachLogTopicIndex = 0);
     destructor Destroy; override;
@@ -153,117 +184,146 @@ type
 
     function GetIndentSpaces: string; inline;
 
-    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); overload;
+    {$ifdef AllowCallsWithTopic}
+    procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); overload; inline;
     procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string; const Args: array of const); overload;
     procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; E: Exception); overload; inline;
     procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception); overload; inline;
     procedure Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string; const Args: array of const; E: Exception); overload;
-
-    procedure Log(ALogSeverity: TLogSeverity; const S: string); overload; inline;
-    procedure Log(ALogSeverity: TLogSeverity; const S: string; const Args: array of const); overload;
-    procedure Log(ALogSeverity: TLogSeverity; E: Exception); overload; inline;
-    procedure Log(ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception); overload; inline;
-    procedure Log(ALogSeverity: TLogSeverity; const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure Log(ALogSeverity: TLogSeverity; const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure Log(ALogSeverity: TLogSeverity; const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure Log(ALogSeverity: TLogSeverity; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure Log(ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure Log(ALogSeverity: TLogSeverity; const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogEmergency(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogEmergency(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogEmergency(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogEmergency(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogEmergency(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogEmergency(const S: string); overload; inline;
-    procedure LogEmergency(const S: string; const Args: array of const); overload;
-    procedure LogEmergency(E: Exception); overload; inline;
-    procedure LogEmergency(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogEmergency(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogEmergency(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogEmergency(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogEmergency(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogEmergency(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogEmergency(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogAlert(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogAlert(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogAlert(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogAlert(const S: string); overload; inline;
-    procedure LogAlert(const S: string; const Args: array of const); overload;
-    procedure LogAlert(E: Exception); overload; inline;
-    procedure LogAlert(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogAlert(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogAlert(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogAlert(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogAlert(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogAlert(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogAlert(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogCritical(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogCritical(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogCritical(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogCritical(const S: string); overload; inline;
-    procedure LogCritical(const S: string; const Args: array of const); overload;
-    procedure LogCritical(E: Exception); overload; inline;
-    procedure LogCritical(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogCritical(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogCritical(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogCritical(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogCritical(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogCritical(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogCritical(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogError(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogError(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogError(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogError(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogError(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogError(const S: string); overload; inline;
-    procedure LogError(const S: string; const Args: array of const); overload;
-    procedure LogError(E: Exception); overload; inline;
-    procedure LogError(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogError(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogError(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogError(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogError(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogError(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogError(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogWarning(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogWarning(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogWarning(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogWarning(const S: string); overload; inline;
-    procedure LogWarning(const S: string; const Args: array of const); overload;
-    procedure LogWarning(E: Exception); overload; inline;
-    procedure LogWarning(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogWarning(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogWarning(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogWarning(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogWarning(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogWarning(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogWarning(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogNotice(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogNotice(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogNotice(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogNotice(const S: string); overload; inline;
-    procedure LogNotice(const S: string; const Args: array of const); overload;
-    procedure LogNotice(E: Exception); overload; inline;
-    procedure LogNotice(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogNotice(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogNotice(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogNotice(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogNotice(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogNotice(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogNotice(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogInfo(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogInfo(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogInfo(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogInfo(const S: string); overload; inline;
-    procedure LogInfo(const S: string; const Args: array of const); overload;
-    procedure LogInfo(E: Exception); overload; inline;
-    procedure LogInfo(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogInfo(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogInfo(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogInfo(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogInfo(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogInfo(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogInfo(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogDebug(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogDebug(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogDebug(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogDebug(const S: string); overload; inline;
-    procedure LogDebug(const S: string; const Args: array of const); overload;
-    procedure LogDebug(E: Exception); overload; inline;
-    procedure LogDebug(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogDebug(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogDebug(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebug(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebug(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebug(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebug(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
+    {$ifdef AllowCallsWithTopic}
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string); overload; inline;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const); overload;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; E: Exception); overload; inline;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const ExtraMsg: string; E: Exception); overload; inline;
     procedure LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string; const Args: array of const; E: Exception); overload;
-    procedure LogDebugVerbose(const S: string); overload; inline;
-    procedure LogDebugVerbose(const S: string; const Args: array of const); overload;
-    procedure LogDebugVerbose(E: Exception); overload; inline;
-    procedure LogDebugVerbose(const ExtraMsg: string; E: Exception); overload; inline;
-    procedure LogDebugVerbose(const S: string; const Args: array of const; E: Exception); overload;
-
+    {$endif}
+    {$ifdef AllowCallsWithoutTopic}
+    procedure LogDebugVerbose(const S: string); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebugVerbose(const S: string; const Args: array of const); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebugVerbose(E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebugVerbose(const ExtraMsg: string; E: Exception); overload; inline; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    procedure LogDebugVerbose(const S: string; const Args: array of const; E: Exception); overload; {$ifdef DeprecateCallsWithoutTopic}deprecated 'Add a topic to your call to Logging';{$endif}
+    {$endif}
     procedure CacheClear;
     procedure WriteCachedLog;
   end;
@@ -689,7 +749,8 @@ begin
   FIndentSpaces := FIndentSpaces + '  ';
 end;
 
-procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string);
+procedure TjachLog.InternalLog(ATopic: TjachLogTopicIndex;
+  ALogSeverity: TLogSeverity; const S: string);
 var
   lRegisteredLogWriters: TList<TjachLogWriter>;
   Writer: TjachLogWriter;
@@ -738,543 +799,760 @@ begin
     end;
 end;
 
-procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string);
+procedure TjachLog.InternalLog(ATopic: TjachLogTopicIndex;
+  ALogSeverity: TLogSeverity; E: Exception);
 begin
-  Log(FDefaultTopic, ALogSeverity, S);
+  InternalLog(ATopic, ALogSeverity, GetExceptionStr(E));
 end;
 
+procedure TjachLog.InternalLog(ATopic: TjachLogTopicIndex;
+  ALogSeverity: TLogSeverity; const ExtraMsg: string; E: Exception);
+begin
+  InternalLog(ATopic, ALogSeverity, ExtraMsg + GetExceptionStr(E));
+end;
+
+{$ifdef AllowCallsWithTopic}
+procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string);
+begin
+  InternalLog(ATopic, ALogSeverity, S);
+end;
+{$endif}
+
+{$ifdef AllowCallsWithoutTopic}
+procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string);
+begin
+  InternalLog(FDefaultTopic, ALogSeverity, S);
+end;
+{$endif}
+
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsEmergency, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsEmergency, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsEmergency, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsEmergency, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogEmergency(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsEmergency, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogEmergency(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsEmergency, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsEmergency, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogEmergency(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsEmergency, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsEmergency, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogEmergency(E: Exception);
 begin
-  Log(lsEmergency, E);
+  InternalLog(FDefaultTopic, lsEmergency, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogEmergency(const S: string);
 begin
-  Log(lsEmergency, S);
+  InternalLog(FDefaultTopic, lsEmergency, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogEmergency(const S: string; const Args: array of const);
 begin
-  Log(lsEmergency, Format(S, Args));
+  InternalLog(FDefaultTopic, lsEmergency, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsAlert, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsAlert, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsAlert, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsAlert, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogAlert(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsAlert, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogAlert(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsAlert, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsAlert, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogAlert(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsAlert, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsAlert, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogAlert(E: Exception);
 begin
-  Log(lsAlert, E);
+  InternalLog(FDefaultTopic, lsAlert, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogAlert(const S: string);
 begin
-  Log(lsAlert, S);
+  InternalLog(FDefaultTopic, lsAlert, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogAlert(const S: string; const Args: array of const);
 begin
-  Log(lsAlert, Format(S, Args));
+  InternalLog(FDefaultTopic, lsAlert, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsCritical, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsCritical, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsCritical, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsCritical, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogCritical(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsCritical, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogCritical(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsCritical, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsCritical, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogCritical(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsCritical, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsCritical, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogCritical(E: Exception);
 begin
-  Log(lsCritical, E);
+  InternalLog(FDefaultTopic, lsCritical, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogCritical(const S: string);
 begin
-  Log(lsCritical, S);
+  InternalLog(FDefaultTopic, lsCritical, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogCritical(const S: string; const Args: array of const);
 begin
-  Log(lsCritical, Format(S, Args));
+  InternalLog(FDefaultTopic, lsCritical, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsError, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogError(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsError, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsError, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsError, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogError(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsError, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogError(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsError, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsError, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogError(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsError, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsError, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogError(E: Exception);
 begin
-  Log(lsError, E);
+  InternalLog(FDefaultTopic, lsError, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogError(const S: string);
 begin
-  Log(lsError, S);
+  InternalLog(FDefaultTopic, lsError, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogError(const S: string; const Args: array of const);
 begin
-  Log(lsError, Format(S, Args));
+  InternalLog(FDefaultTopic, lsError, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsWarning, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsWarning, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsWarning, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsWarning, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogWarning(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsWarning, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogWarning(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsWarning, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsWarning, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogWarning(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsWarning, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsWarning, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogWarning(E: Exception);
 begin
-  Log(lsWarning, E);
+  InternalLog(FDefaultTopic, lsWarning, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogWarning(const S: string);
 begin
-  Log(lsWarning, S);
+  InternalLog(FDefaultTopic, lsWarning, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogWarning(const S: string; const Args: array of const);
 begin
-  Log(lsWarning, Format(S, Args));
+  InternalLog(FDefaultTopic, lsWarning, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsNotice, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsNotice, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsNotice, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsNotice, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogNotice(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsNotice, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogNotice(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsNotice, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsNotice, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogNotice(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsNotice, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsNotice, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogNotice(E: Exception);
 begin
-  Log(lsNotice, E);
+  InternalLog(FDefaultTopic, lsNotice, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogNotice(const S: string);
 begin
-  Log(lsNotice, S);
+  InternalLog(FDefaultTopic, lsNotice, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogNotice(const S: string; const Args: array of const);
 begin
-  Log(lsNotice, Format(S, Args));
+  InternalLog(FDefaultTopic, lsNotice, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsInfo, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsInfo, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsInfo, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsInfo, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogInfo(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsInfo, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogInfo(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsInfo, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsInfo, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogInfo(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsInfo, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsInfo, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogInfo(E: Exception);
 begin
-  Log(lsInfo, E);
+  InternalLog(FDefaultTopic, lsInfo, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogInfo(const S: string);
 begin
-  Log(lsInfo, S);
+  InternalLog(FDefaultTopic, lsInfo, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogInfo(const S: string; const Args: array of const);
 begin
-  Log(lsInfo, Format(S, Args));
+  InternalLog(FDefaultTopic, lsInfo, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsDebug, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsDebug, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsDebug, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsDebug, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebug(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsDebug, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebug(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsDebug, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsDebug, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebug(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsDebug, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsDebug, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebug(E: Exception);
 begin
-  Log(lsDebug, E);
+  InternalLog(FDefaultTopic, lsDebug, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebug(const S: string);
 begin
-  Log(lsDebug, S);
+  InternalLog(FDefaultTopic, lsDebug, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebug(const S: string; const Args: array of const);
 begin
-  Log(lsDebug, Format(S, Args));
+  InternalLog(FDefaultTopic, lsDebug, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const; E: Exception);
 begin
   Log(ATopic, lsDebug, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, lsDebug, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; E: Exception);
 begin
   Log(ATopic, lsDebug, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string;
   const Args: array of const);
 begin
   Log(ATopic, lsDebug, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.LogDebugVerbose(ATopic: TjachLogTopicIndex; const S: string);
 begin
   Log(ATopic, lsDebug, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebugVerbose(const S: string; const Args: array of const;
   E: Exception);
 begin
-  Log(lsDebug, Format(S, Args), E);
+  InternalLog(FDefaultTopic, lsDebug, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebugVerbose(const ExtraMsg: string; E: Exception);
 begin
-  Log(lsDebug, ExtraMsg, E);
+  InternalLog(FDefaultTopic, lsDebug, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebugVerbose(E: Exception);
 begin
-  Log(lsDebug, E);
+  InternalLog(FDefaultTopic, lsDebug, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebugVerbose(const S: string);
 begin
-  Log(lsDebug, S);
+  InternalLog(FDefaultTopic, lsDebug, S);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.LogDebugVerbose(const S: string; const Args: array of const);
 begin
-  Log(lsDebug, Format(S, Args));
+  InternalLog(FDefaultTopic, lsDebug, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
   const ExtraMsg: string; E: Exception);
 begin
   Log(ATopic, ALogSeverity,  Format('%s'#13'%s', [ExtraMsg, GetExceptionStr(E)]));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
   const S: string; const Args: array of const; E: Exception);
 begin
   Log(ATopic, ALogSeverity, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
   E: Exception);
 begin
   Log(ATopic, ALogSeverity, GetExceptionStr(E));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithTopic}
 procedure TjachLog.Log(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity;
   const S: string; const Args: array of const);
 begin
   Log(ATopic, ALogSeverity, Format(S, Args));
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string;
   const Args: array of const; E: Exception);
 begin
-  Log(FDefaultTopic, ALogSeverity, Format(S, Args), E);
+  InternalLog(FDefaultTopic, ALogSeverity, Format(S, Args), E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.Log(ALogSeverity: TLogSeverity; const ExtraMsg: string;
   E: Exception);
 begin
-  Log(FDefaultTopic, ALogSeverity, ExtraMsg, E);
+  InternalLog(FDefaultTopic, ALogSeverity, ExtraMsg, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.Log(ALogSeverity: TLogSeverity; E: Exception);
 begin
-  Log(FDefaultTopic, ALogSeverity, E);
+  InternalLog(FDefaultTopic, ALogSeverity, E);
 end;
+{$endif}
 
+{$ifdef AllowCallsWithoutTopic}
 procedure TjachLog.Log(ALogSeverity: TLogSeverity; const S: string;
   const Args: array of const);
 begin
-  Log(FDefaultTopic, ALogSeverity, Format(S, Args));
+  InternalLog(FDefaultTopic, ALogSeverity, Format(S, Args));
 end;
+{$endif}
 
 procedure TjachLog.RegisterLogWriter(ALogWriter: TjachLogWriter);
 begin
@@ -1447,7 +1725,7 @@ begin
     on E:Exception do
     begin
       FIndentSpaces := '';
-      LogError('Cached LOG Write Error', E);
+      InternalLog(FDefaultTopic, lsError, 'Cached LOG Write Error', E);
     end;
   end;
 end;
