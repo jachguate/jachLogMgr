@@ -88,12 +88,14 @@ type
     function GetTimeStamp: TDateTime;
     function GetSeverity: TLogSeverity;
     function GetTopic: TjachLogTopicIndex;
+    function GetDebugVerbosity: Byte;
     property LogString: string read GetLogString;
     property Indent: string read GetIndent;
     property ThreadID: TThreadID read GetThreadID;
     property TimeStamp: TDateTime read GetTimeStamp;
     property Severity: TLogSeverity read GetSeverity;
     property Topic: TjachLogTopicIndex read GetTopic;
+    property DebugVerbosity: Byte read GetDebugVerbosity;
   end;
 
   TjachLogEntryList = class(TList<IjachLogEntry>)
@@ -105,9 +107,11 @@ type
     FThread: TThread;
     FIsActive: Boolean;
     FLogLevel: array[TjachLogTopicIndex] of TLogLevel;
+    FDebugVerbosityThereshold: Byte;
     procedure SetIsActive(const Value: Boolean);
     function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
     procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
+    procedure SetDebugVerbosityThereshold(const Value: Byte);
   protected
     const WWMAX_LEN = 255;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
@@ -117,8 +121,8 @@ type
     procedure OpenLogChannel; virtual;
     procedure CloseLogChannel; virtual;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
-      const S, AIndentSpaces: string; const AThreadID: TThreadID;
-      const ATimeStamp: TDateTime); virtual; abstract;
+      ADebugVerbosity: Byte; const S, AIndentSpaces: string;
+      const AThreadID: TThreadID; const ATimeStamp: TDateTime); virtual; abstract;
     procedure WriteEntry(AEntry: IjachLogEntry); virtual;
     function GetLock: TCriticalSection; virtual;
     procedure SetWriterThread(AThread: TThread);
@@ -126,6 +130,7 @@ type
     property Lock: TCriticalSection read GetLock;
     property Thread: TThread read FThread;
     property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
+    property DebugVerbosityThereshold: Byte read FDebugVerbosityThereshold write SetDebugVerbosityThereshold;
   end;
 
   TjachLogWriterClass = class of TjachLogWriter;
@@ -157,7 +162,7 @@ type
     FWriteThread: TThread;
     FDebugVerbosityThereshold: Byte;
     function GetExceptionStr(E: Exception): string;
-    procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string); inline;
+    procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const S: string); inline;
     procedure SetIsCached(const Value: Boolean);
     function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
     procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
@@ -345,8 +350,8 @@ type
   end;
 
 function LogSeverityToStr(ALogSeverity: TLogSeverity): string;
-function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string): IjachLogEntry; overload;
-function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime): IjachLogEntry; overload;
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string): IjachLogEntry; overload;
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime): IjachLogEntry; overload;
 
 var
   jachLog: TjachLog;
@@ -370,15 +375,17 @@ type
     FTimeStamp: TDateTime;
     FSeverity: TLogSeverity;
     FTopic: TjachLogTopicIndex;
+    FDebugVerbosity: Byte;
     function GetLogString: string;
     function GetIndent: string;
     function GetThreadID: TThreadID;
     function GetTimeStamp: TDateTime;
     function GetSeverity: TLogSeverity;
     function GetTopic: TjachLogTopicIndex;
+    function GetDebugVerbosity: Byte;
   public
-    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string); overload;
-    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime); overload;
+    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string); overload;
+    constructor Create(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime); overload;
   end;
 
   TjachLogWriteCoordinatorThread = class(TThread)
@@ -423,20 +430,20 @@ begin
   end;
 end;
 
-function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string): IjachLogEntry;
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string): IjachLogEntry;
 begin
-  Result := TLogEntry.Create(ATopic, ASeverity, AIndent, ALogString);
+  Result := TLogEntry.Create(ATopic, ASeverity, ADebugVerbosity, AIndent, ALogString);
 end;
 
-function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime): IjachLogEntry; overload;
+function CreateLogEntry(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string; AThreadID: TThreadID; ATimeStamp: TDateTime): IjachLogEntry; overload;
 begin
-  Result := TLogEntry.Create(ATopic, ASeverity, AIndent, ALogString, AThreadID, ATimeStamp);
+  Result := TLogEntry.Create(ATopic, ASeverity, ADebugVerbosity, AIndent, ALogString, AThreadID, ATimeStamp);
 end;
 
 { TLogEntry }
 
 constructor TLogEntry.Create(ATopic: TjachLogTopicIndex;
-  ASeverity: TLogSeverity; AIndent, ALogString: string);
+  ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string);
 begin
   inherited Create;
   FTimeStamp := Now;
@@ -445,15 +452,21 @@ begin
   FSeverity := ASeverity;
   FThreadID := GetCurrentThreadId;
   FTopic := ATopic;
+  FDebugVerbosity := ADebugVerbosity;
 end;
 
 constructor TLogEntry.Create(ATopic: TjachLogTopicIndex;
-  ASeverity: TLogSeverity; AIndent, ALogString: string; AThreadID: TThreadID;
-  ATimeStamp: TDateTime);
+  ASeverity: TLogSeverity; ADebugVerbosity: Byte; AIndent, ALogString: string;
+  AThreadID: TThreadID; ATimeStamp: TDateTime);
 begin
-  Create(ATopic, ASeverity, AIndent, ALogString);
+  Create(ATopic, ASeverity, ADebugVerbosity, AIndent, ALogString);
   FThreadID := AThreadID;
   FTimeStamp := ATimeStamp;
+end;
+
+function TLogEntry.GetDebugVerbosity: Byte;
+begin
+  Result := FDebugVerbosity;
 end;
 
 function TLogEntry.GetIndent: string;
@@ -529,6 +542,11 @@ end;
 procedure TjachLogWriter.OpenLogChannel;
 begin
 
+end;
+
+procedure TjachLogWriter.SetDebugVerbosityThereshold(const Value: Byte);
+begin
+  FDebugVerbosityThereshold := Value;
 end;
 
 procedure TjachLogWriter.SetIsActive(const Value: Boolean);
@@ -608,7 +626,7 @@ end;
 procedure TjachLogWriter.WriteEntry(AEntry: IjachLogEntry);
 begin
   if Assigned(AEntry) then
-    Write(AEntry.Topic, AEntry.Severity, AEntry.LogString, AEntry.Indent, AEntry.ThreadID, AEntry.TimeStamp);
+    Write(AEntry.Topic, AEntry.Severity, AEntry.DebugVerbosity, AEntry.LogString, AEntry.Indent, AEntry.ThreadID, AEntry.TimeStamp);
 end;
 
 { TLogCache }
@@ -637,11 +655,11 @@ begin
   end;
 end;
 
-procedure TjachLog.CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; const S: string);
+procedure TjachLog.CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const S: string);
 begin
   FCacheCS.Enter;
   try
-    FCache.EntryList.Add(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, S));
+    FCache.EntryList.Add(CreateLogEntry (ATopic, ALogSeverity, ADebugVerbosity, FIndentSpaces, S));
   finally
     FCacheCS.Leave;
   end;
@@ -773,29 +791,32 @@ begin
   then
     if FIsCached then
       if FIncludeTopicName then
-        CacheLog(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S)
+        CacheLog(ATopic, ALogSeverity, ADebugVerbosity, '[' + FTopicName[ATopic] + ']' + S)
       else
-        CacheLog(ATopic, ALogSeverity, S)
+        CacheLog(ATopic, ALogSeverity, ADebugVerbosity, S)
     else if FUseSeparateThreadToWrite then
       if FIncludeTopicName then
-        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, '[' + FTopicName[ATopic] + ']' + S))
+        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, ADebugVerbosity, FIndentSpaces, '[' + FTopicName[ATopic] + ']' + S))
       else
-        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, FIndentSpaces, S))
+        TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (ATopic, ALogSeverity, ADebugVerbosity, FIndentSpaces, S))
     else
     begin
       lRegisteredLogWriters := FRegisteredLogWriters.LockList;
       try
         for Writer in lRegisteredLogWriters do
-          if Writer.IsActive and (Byte(Writer.FLogLevel[ATopic]) > Byte(ALogSeverity)) then
+          if     (Writer.IsActive)
+             and (Byte(Writer.FLogLevel[ATopic]) > Byte(ALogSeverity))
+             and ((ALogSeverity <> lsDebug) or (ADebugVerbosity <= Writer.FDebugVerbosityThereshold))
+          then
             try
               Writer.Lock.Enter;
               try
                 Writer.OpenLogChannel;
                 try
                   if FIncludeTopicName then
-                    Writer.Write(ATopic, ALogSeverity, '[' + FTopicName[ATopic] + ']' + S, FIndentSpaces, GetCurrentThreadID, Now)
+                    Writer.Write(ATopic, ALogSeverity, ADebugVerbosity, '[' + FTopicName[ATopic] + ']' + S, FIndentSpaces, GetCurrentThreadID, Now)
                   else
-                    Writer.Write(ATopic, ALogSeverity, S, FIndentSpaces, GetCurrentThreadID, Now);
+                    Writer.Write(ATopic, ALogSeverity, ADebugVerbosity, S, FIndentSpaces, GetCurrentThreadID, Now);
                 finally
                   Writer.CloseLogChannel;
                 end;
@@ -1686,11 +1707,13 @@ procedure TjachLog.WriteCachedLog;
                 try
                   Writer.OpenLogChannel;
                   try
-                    Writer.Write(0, lsInfo, 'Cached LOG Write BEGIN ********************', '', GetCurrentThreadId, Now);
+                    Writer.Write(0, lsInfo, 0{Verbosity}, 'Cached LOG Write BEGIN ********************', '', GetCurrentThreadId, Now);
                     for LogEntry in FCache.EntryList do
-                      if (Byte(Writer.FLogLevel[LogEntry.Topic]) > Byte(LogEntry.Severity)) then
+                      if     (Byte(Writer.FLogLevel[LogEntry.Topic]) > Byte(LogEntry.Severity))
+                         and ((LogEntry.Severity <> lsDebug) or (LogEntry.DebugVerbosity <= Writer.FDebugVerbosityThereshold))
+                      then
                         Writer.WriteEntry(LogEntry);
-                    Writer.Write(0, lsInfo, 'Cached LOG Write END **********************', '', GetCurrentThreadId, Now);
+                    Writer.Write(0, lsInfo, 0{Verbosity}, 'Cached LOG Write END **********************', '', GetCurrentThreadId, Now);
                   finally
                     Writer.CloseLogChannel;
                   end;
@@ -1719,10 +1742,10 @@ procedure TjachLog.WriteCachedLog;
   begin
     FCacheCS.Enter;
     try
-      TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (0, lsInfo, '', 'Cached LOG Write BEGIN ********************'));
+      TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (0, lsInfo, 0{DebugVerbosity}, '', 'Cached LOG Write BEGIN ********************'));
       for LogEntry in FCache.EntryList do
         TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(LogEntry);
-      TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (0, lsInfo, '', 'Cached LOG Write END ********************'));
+      TjachLogWriteCoordinatorThread(FWriteThread).FEntryQueue.PushItem(CreateLogEntry (0, lsInfo, 0{DebugVerbosity}, '', 'Cached LOG Write END ********************'));
       FCache.EntryList.Clear;
     finally
       FCacheCS.Leave;

@@ -64,8 +64,8 @@ type
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
-      const S, AIndentSpaces: string; const AThreadID: TThreadID;
-      const ATimeStamp: TDateTime); override;
+      ADebugVerbosity: Byte; const S, AIndentSpaces: string;
+      const AThreadID: TThreadID; const ATimeStamp: TDateTime); override;
     procedure RotateLogs;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
@@ -238,7 +238,7 @@ begin
 end;
 
 procedure TjachLogToDisk.Write(ATopic: TjachLogTopicIndex;
-  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  ASeverity: TLogSeverity; ADebugVerbosity: Byte; const S, AIndentSpaces: string;
   const AThreadID: TThreadID; const ATimeStamp: TDateTime);
 var
   DT: string;
