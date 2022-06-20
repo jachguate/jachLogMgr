@@ -70,6 +70,15 @@ uses Classes, System.SysUtils, System.Types, System.SyncObjs,
   {$undef AllowLogWithoutTopic}
   {$define AllowLogWithTopic}
 {$endif}
+{$ifdef ForceLogDebugWithoutVerbosity}
+  {$undef AllowLogDebugWithVerbosity}
+  {$define AllowLogDebugWithoutVerbosity}
+{$endif}
+{$ifdef ForceLogDebugWithVerbosity}
+  {$define AllowLogDebugWithVerbosity}
+  {$undef AllowLogDebugWithoutVerbosity}
+{$endif}
+
 {$ifndef AllowLogWithTopic}
   {$undef DeprecateCallsToLogWithoutTopic}
 {$endif}
