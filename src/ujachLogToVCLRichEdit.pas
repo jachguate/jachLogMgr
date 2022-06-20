@@ -50,6 +50,8 @@ type
     FCurrentLineLength: Integer;
     FDateTimeFormat: string;
     FMessagesAdded: Boolean;
+    FAutoCapLineCountThreshold: Integer;
+    FAutoCapLineCountStays: Integer;
     procedure SetRichEdit(const Value: TRichEdit);
     procedure TimerEvent(Sender: TObject);
     function GetRefreshInterval: Cardinal;
@@ -64,6 +66,8 @@ type
     procedure SetFontStyle(ASeverity: TLogSeverity; const Value: TFontStyles);
     procedure SetMaxLength(const Value: Integer);
     procedure SetDateTimeFormat(const Value: string);
+    procedure SetAutoCapLineCountStays(const Value: Integer);
+    procedure SetAutoCapLineCountThreshold(const Value: Integer);
   public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
@@ -80,6 +84,8 @@ type
     property FontStyle[ASeverity: TLogSeverity]: TFontStyles read GetFontStyle write SetFontStyle;
     property MaxLength: Integer read FMaxLength write SetMaxLength;
     property DateTimeFormat: string read FDateTimeFormat write SetDateTimeFormat;
+    property AutoCapLineCountThreshold: Integer read FAutoCapLineCountThreshold write SetAutoCapLineCountThreshold;
+    property AutoCapLineCountStays: Integer read FAutoCapLineCountStays write SetAutoCapLineCountStays;
   end;
 
 
@@ -198,6 +204,17 @@ begin
   end;
 end;
 
+procedure TjachLogToVCLRichEdit.SetAutoCapLineCountStays(const Value: Integer);
+begin
+  FAutoCapLineCountStays := Value;
+end;
+
+procedure TjachLogToVCLRichEdit.SetAutoCapLineCountThreshold(
+  const Value: Integer);
+begin
+  FAutoCapLineCountThreshold := Value;
+end;
+
 procedure TjachLogToVCLRichEdit.SetDateTimeFormat(const Value: string);
 begin
   FDateTimeFormat := Value;
@@ -266,6 +283,26 @@ procedure TjachLogToVCLRichEdit.TimerEvent(Sender: TObject);
     FCurrentLineLength := FRichEdit.Width div MeasureFontWidth;
   end;
 
+  procedure CapRichEditContent;
+  var
+    I: Integer;
+    SrcCount, DeleteCount: Integer;
+    DeleteLen: Integer;
+  begin
+    if (FAutoCapLineCountThreshold = 0) then
+      Exit;
+    SrcCount := FRichEdit.Lines.Count;
+    if (SrcCount <= FAutoCapLineCountThreshold) or (SrcCount <= FAutoCapLineCountStays) then
+      Exit;
+    DeleteCount := SrcCount - FAutoCapLineCountStays;
+    DeleteLen := 0;
+    for I := 0 to DeleteCount - 1 do
+      DeleteLen := DeleteLen + Length(FRichEdit.Lines[I]) + 1;
+    FRichEdit.SelStart := 0;
+    FRichEdit.SelLength := DeleteLen;;
+    FRichEdit.SelText := '';
+  end;
+
 var
   lEntry: IjachLogEntry;
   IsModified: Boolean;
@@ -281,6 +318,13 @@ begin
   begin
     FRichEdit.Lines.BeginUpdate;
     try
+      if (FAutoCapLineCountThreshold <> 0) and (FEntries.QueueSize > FAutoCapLineCountThreshold) then
+      begin
+        FRichEdit.Lines.Clear;
+        while FEntries.QueueSize > FAutoCapLineCountThreshold do
+          FEntries.PopItem;
+      end;
+
       while FEntries.QueueSize > 0 do
       begin
         lEntry := FEntries.PopItem;
@@ -290,6 +334,7 @@ begin
           Write(lEntry.Topic, lEntry.Severity, lEntry.DebugVerbosity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
         end;
       end;
+      CapRichEditContent;
     finally
       FRichEdit.Lines.EndUpdate;
     end;
