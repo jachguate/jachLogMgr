@@ -107,11 +107,11 @@ type
     FThread: TThread;
     FIsActive: Boolean;
     FLogLevel: array[TjachLogTopicIndex] of TLogLevel;
-    FDebugVerbosityThereshold: Byte;
+    FDebugVerbosityThreshold: Byte;
     procedure SetIsActive(const Value: Boolean);
     function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
     procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
-    procedure SetDebugVerbosityThereshold(const Value: Byte);
+    procedure SetDebugVerbosityThreshold(const Value: Byte);
   protected
     const WWMAX_LEN = 255;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
@@ -130,7 +130,7 @@ type
     property Lock: TCriticalSection read GetLock;
     property Thread: TThread read FThread;
     property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
-    property DebugVerbosityThereshold: Byte read FDebugVerbosityThereshold write SetDebugVerbosityThereshold;
+    property DebugVerbosityThreshold: Byte read FDebugVerbosityThreshold write SetDebugVerbosityThreshold;
   end;
 
   TjachLogWriterClass = class of TjachLogWriter;
@@ -160,7 +160,7 @@ type
     FIncludeTopicName: Boolean;
     FUseSeparateThreadToWrite: Boolean;
     FWriteThread: TThread;
-    FDebugVerbosityThereshold: Byte;
+    FDebugVerbosityThreshold: Byte;
     function GetExceptionStr(E: Exception): string;
     procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const S: string); inline;
     procedure SetIsCached(const Value: Boolean);
@@ -170,7 +170,7 @@ type
     procedure SetTopicName(Index: TjachLogTopicIndex; const Value: string);
     procedure SetIncludeTopicName(const Value: Boolean);
     procedure SetUseSeparateThreadToWrite(const Value: Boolean);
-    procedure SetDebugVerbosityThereshold(const Value: Byte);
+    procedure SetDebugVerbosityThreshold(const Value: Byte);
     procedure FreeRegisteredLogWriters;
     procedure TerminateCoordinatorThread;
     procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const S: string); overload;
@@ -181,7 +181,7 @@ type
     destructor Destroy; override;
 
     property IsCached: Boolean read FIsCached write SetIsCached;
-    property DebugVerbosityThereshold: Byte read FDebugVerbosityThereshold write SetDebugVerbosityThereshold;
+    property DebugVerbosityThreshold: Byte read FDebugVerbosityThreshold write SetDebugVerbosityThreshold;
     property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
     property TopicName[Index: TjachLogTopicIndex]: string read GetTopicName write SetTopicName;
     property DefaultTopic: TjachLogTopicIndex read FDefaultTopic write FDefaultTopic;
@@ -544,9 +544,9 @@ begin
 
 end;
 
-procedure TjachLogWriter.SetDebugVerbosityThereshold(const Value: Byte);
+procedure TjachLogWriter.SetDebugVerbosityThreshold(const Value: Byte);
 begin
-  FDebugVerbosityThereshold := Value;
+  FDebugVerbosityThreshold := Value;
 end;
 
 procedure TjachLogWriter.SetIsActive(const Value: Boolean);
@@ -787,7 +787,7 @@ begin
     Exit;
 
   if     (Byte(FLogLevel[ATopic]) > Byte(ALogSeverity))
-     and ((ALogSeverity <> lsDebug) or (ADebugVerbosity <= FDebugVerbosityThereshold))
+     and ((ALogSeverity <> lsDebug) or (ADebugVerbosity <= FDebugVerbosityThreshold))
   then
     if FIsCached then
       if FIncludeTopicName then
@@ -806,7 +806,7 @@ begin
         for Writer in lRegisteredLogWriters do
           if     (Writer.IsActive)
              and (Byte(Writer.FLogLevel[ATopic]) > Byte(ALogSeverity))
-             and ((ALogSeverity <> lsDebug) or (ADebugVerbosity <= Writer.FDebugVerbosityThereshold))
+             and ((ALogSeverity <> lsDebug) or (ADebugVerbosity <= Writer.FDebugVerbosityThreshold))
           then
             try
               Writer.Lock.Enter;
@@ -1605,9 +1605,9 @@ begin
   end;
 end;
 
-procedure TjachLog.SetDebugVerbosityThereshold(const Value: Byte);
+procedure TjachLog.SetDebugVerbosityThreshold(const Value: Byte);
 begin
-  FDebugVerbosityThereshold := Value;
+  FDebugVerbosityThreshold := Value;
 end;
 
 procedure TjachLog.SetIncludeTopicName(const Value: Boolean);
@@ -1710,7 +1710,7 @@ procedure TjachLog.WriteCachedLog;
                     Writer.Write(0, lsInfo, 0{Verbosity}, 'Cached LOG Write BEGIN ********************', '', GetCurrentThreadId, Now);
                     for LogEntry in FCache.EntryList do
                       if     (Byte(Writer.FLogLevel[LogEntry.Topic]) > Byte(LogEntry.Severity))
-                         and ((LogEntry.Severity <> lsDebug) or (LogEntry.DebugVerbosity <= Writer.FDebugVerbosityThereshold))
+                         and ((LogEntry.Severity <> lsDebug) or (LogEntry.DebugVerbosity <= Writer.FDebugVerbosityThreshold))
                       then
                         Writer.WriteEntry(LogEntry);
                     Writer.Write(0, lsInfo, 0{Verbosity}, 'Cached LOG Write END **********************', '', GetCurrentThreadId, Now);
