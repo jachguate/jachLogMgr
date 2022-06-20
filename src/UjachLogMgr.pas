@@ -52,7 +52,13 @@ the simplest calls available.
 {$define AllowLogWithoutTopic}
 {.$define DeprecateCallsToLogWithoutTopic}
 {$define AllowLogWithTopic}
-{$define AllowLogDebugWithVerbosity}
+{
+The AllowLogDebugWithVerbosity/AllowLogDebugWithoutVerbosity defines are mutually
+exclusive. Only one of the two should be defined at any time, if both are
+defined the library will keep AllowLogDebugWithVerbosity and ignore
+AllowLogDebugWithoutVerbosity
+}
+{.$define AllowLogDebugWithVerbosity}
 {$define AllowLogDebugWithoutVerbosity}
 unit ujachLogMgr;
 
@@ -82,17 +88,20 @@ uses Classes, System.SysUtils, System.Types, System.SyncObjs,
 {$ifndef AllowLogWithTopic}
   {$undef DeprecateCallsToLogWithoutTopic}
 {$endif}
-
 {$if not defined(AllowLogWithoutTopic) and not defined(AllowLogWithTopic)}
   {$define AllowLogWithoutTopic}
 {$ifend}
-
 {$if not defined(AllowLogDebugWithVerbosity) and not defined(AllowLogDebugWithoutVerbosity)}
   {$define AllowLogDebugWithoutVerbosity}
 {$ifend}
 
+{$if defined(AllowLogDebugWithVerbosity) and defined(AllowLogDebugWithoutVerbosity)}
+  {$undef AllowLogDebugWithoutVerbosity}
+{$ifend}
+
+
 type
-  TjachLogTopicIndex = 0..63;
+  TjachLogTopicIndex = Byte;
 
   TLogSeverity = (          lsEmergency{0}, lsAlert{1}, lsCritical{2}, lsError{3}, lsWarning{4}, lsNotice{5}, lsInfo{6}, lsDebug{7});
   TLogLevel    = (llOff{0}, llEmergency{1}, llAlert{2}, llCritical{3}, llError{4}, llWarning{5}, llNotice{6}, llInfo{7}, llDebug{8}, llAll{9});
