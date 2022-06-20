@@ -52,7 +52,13 @@ the simplest calls available.
 {$define AllowLogWithoutTopic}
 {.$define DeprecateCallsToLogWithoutTopic}
 {$define AllowLogWithTopic}
-{$define AllowLogDebugWithVerbosity}
+{
+The AllowLogDebugWithVerbosity/AllowLogDebugWithoutVerbosity defines are mutually
+exclusive. Only one of the two should be defined at any time, if both are
+defined the library will keep AllowLogDebugWithVerbosity and ignore
+AllowLogDebugWithoutVerbosity
+}
+{.$define AllowLogDebugWithVerbosity}
 {$define AllowLogDebugWithoutVerbosity}
 unit ujachLogMgr;
 
@@ -82,14 +88,17 @@ uses Classes, System.SysUtils, System.Types, System.SyncObjs,
 {$ifndef AllowLogWithTopic}
   {$undef DeprecateCallsToLogWithoutTopic}
 {$endif}
-
 {$if not defined(AllowLogWithoutTopic) and not defined(AllowLogWithTopic)}
   {$define AllowLogWithoutTopic}
 {$ifend}
-
 {$if not defined(AllowLogDebugWithVerbosity) and not defined(AllowLogDebugWithoutVerbosity)}
   {$define AllowLogDebugWithoutVerbosity}
 {$ifend}
+
+{$if defined(AllowLogDebugWithVerbosity) and defined(AllowLogDebugWithoutVerbosity)}
+  {$undef AllowLogDebugWithoutVerbosity}
+{$ifend}
+
 
 type
   TjachLogTopicIndex = 0..63;
