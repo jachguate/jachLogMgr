@@ -69,8 +69,8 @@ type
     procedure CloseLogChannel; override;
     procedure WriteEntry(AEntry: IjachLogEntry); override;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
-      const S, AIndentSpaces: string; const AThreadID: TThreadID;
-      const ATimeStamp: TDateTime); override;
+      ADebugVerbosity: Byte; const S, AIndentSpaces: string;
+      const AThreadID: TThreadID; const ATimeStamp: TDateTime); override;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
@@ -276,10 +276,10 @@ begin
 end;
 
 procedure TjachLogToFMXMemo.Write(ATopic: TjachLogTopicIndex;
-  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  ASeverity: TLogSeverity; ADebugVerbosity: Byte; const S, AIndentSpaces: string;
   const AThreadID: TThreadID; const ATimeStamp: TDateTime);
 begin
-  case FEntries.PushItem(CreateLogEntry(ATopic, ASeverity, AIndentSpaces, S, AThreadID, ATimeStamp)) of
+  case FEntries.PushItem(CreateLogEntry(ATopic, ASeverity, ADebugVerbosity, AIndentSpaces, S, AThreadID, ATimeStamp)) of
     wrSignaled, wrTimeout, wrAbandoned, wrError, wrIOCompletion: ;
   end;
 end;

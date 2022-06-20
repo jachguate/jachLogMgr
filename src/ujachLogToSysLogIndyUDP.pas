@@ -49,8 +49,8 @@ type
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
-      const S, AIndentSpaces: string; const AThreadID: TThreadID;
-      const ATimeStamp: TDateTime); override;
+      ADebugVerbosity: Byte; const S, AIndentSpaces: string;
+      const AThreadID: TThreadID; const ATimeStamp: TDateTime); override;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
@@ -100,7 +100,7 @@ begin
 end;
 
 procedure TjachLogToSysLogIndyUDP.Write(ATopic: TjachLogTopicIndex;
-  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  ASeverity: TLogSeverity; ADebugVerbosity: Byte; const S, AIndentSpaces: string;
   const AThreadID: TThreadID; const ATimeStamp: TDateTime);
 begin
   FIdSysLogMessage.TimeStamp := ATimeStamp;
