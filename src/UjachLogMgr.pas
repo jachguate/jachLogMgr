@@ -62,6 +62,14 @@ uses Classes, System.SysUtils, System.Types, System.SyncObjs,
   System.Generics.Collections;
 
 //adjust your symbols before the unit declaration, do not touch this part
+{$ifdef ForceLogWithoutTopic}
+  {$define AllowLogWithoutTopic}
+  {$undef AllowLogWithTopic}
+{$endif}
+{$ifdef ForceLogWithTopic}
+  {$undef AllowLogWithoutTopic}
+  {$define AllowLogWithTopic}
+{$endif}
 {$ifndef AllowLogWithTopic}
   {$undef DeprecateCallsToLogWithoutTopic}
 {$endif}
