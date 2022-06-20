@@ -69,8 +69,8 @@ type
     procedure CloseLogChannel; override;
     procedure WriteEntry(AEntry: IjachLogEntry); override;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
-      const S, AIndentSpaces: string; const AThreadID: TThreadID;
-      const ATimeStamp: TDateTime); override;
+      ADebugVerbosity: Byte; const S, AIndentSpaces: string;
+      const AThreadID: TThreadID; const ATimeStamp: TDateTime); override;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     destructor Destroy; override;
@@ -287,7 +287,7 @@ begin
         if Assigned(lEntry) then
         begin
           IsModified := True;
-          Write(lEntry.Topic, lEntry.Severity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
+          Write(lEntry.Topic, lEntry.Severity, lEntry.DebugVerbosity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
         end;
       end;
     finally
@@ -304,9 +304,8 @@ begin
 end;
 
 procedure TjachLogToVCLRichEdit.Write(ATopic: TjachLogTopicIndex;
-  ASeverity: TLogSeverity; const S, AIndentSpaces: string;
+  ASeverity: TLogSeverity; ADebugVerbosity: Byte; const S, AIndentSpaces: string;
   const AThreadID: TThreadID; const ATimeStamp: TDateTime);
-
 var
   DT, Margin: string;
   Msgs: TStringDynArray;
