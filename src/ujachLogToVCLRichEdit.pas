@@ -283,7 +283,7 @@ procedure TjachLogToVCLRichEdit.TimerEvent(Sender: TObject);
     FCurrentLineLength := FRichEdit.Width div MeasureFontWidth;
   end;
 
-  procedure CapRichEditContent;
+  procedure CapRichEditContent(var MemorySelStart, MemorySelLength: Integer);
   var
     I: Integer;
     SrcCount, DeleteCount: Integer;
@@ -298,6 +298,15 @@ procedure TjachLogToVCLRichEdit.TimerEvent(Sender: TObject);
     DeleteLen := 0;
     for I := 0 to DeleteCount - 1 do
       DeleteLen := DeleteLen + Length(FRichEdit.Lines[I]) + 1;
+    if MemorySelStart < DeleteLen then
+    begin
+      MemorySelStart := 0;
+      MemorySelLength := 0;
+    end
+    else
+    begin
+      MemorySelStart := MemorySelStart - DeleteLen;
+    end;
     FRichEdit.SelStart := 0;
     FRichEdit.SelLength := DeleteLen;;
     FRichEdit.SelText := '';
@@ -306,16 +315,22 @@ procedure TjachLogToVCLRichEdit.TimerEvent(Sender: TObject);
 var
   lEntry: IjachLogEntry;
   IsModified: Boolean;
+  WasAtTheEnd: Boolean;
+  WasFocused: Boolean;
+  MemorySelStart, MemorySelLength: Integer;
 begin
   IsModified := False;
   if not Assigned(FRichEdit) then
     Exit;
 
-  if FMaxLength = -1 then
-    CalculateCurrentLength;
-
   if FEntries.QueueSize > 0 then
   begin
+    if FMaxLength = -1 then
+      CalculateCurrentLength;
+    MemorySelStart := FRichEdit.SelStart;
+    MemorySelLength := FRichEdit.SelLength;
+    WasAtTheEnd := MemorySelStart >= (FRichEdit.GetTextLen - FRichEdit.Lines.Count - 1);
+    WasFocused := FRichEdit.Focused;
     FRichEdit.Lines.BeginUpdate;
     try
       if (FAutoCapLineCountThreshold <> 0) and (FEntries.QueueSize > FAutoCapLineCountThreshold) then
@@ -327,6 +342,8 @@ begin
 
       while FEntries.QueueSize > 0 do
       begin
+        if WasFocused then
+          FRichEdit.Perform(WM_KILLFOCUS, 0, 0);
         lEntry := FEntries.PopItem;
         if Assigned(lEntry) then
         begin
@@ -334,18 +351,22 @@ begin
           Write(lEntry.Topic, lEntry.Severity, lEntry.DebugVerbosity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
         end;
       end;
-      CapRichEditContent;
+      CapRichEditContent(MemorySelStart, MemorySelLength);
+      if WasAtTheEnd then
+        FRichEdit.SelStart := MaxInt
+      else
+      begin
+        FRichEdit.SelStart := MemorySelStart;
+        FRichEdit.SelLength := MemorySelLength;
+      end;
     finally
       FRichEdit.Lines.EndUpdate;
     end;
-    if IsModified then
-    begin
-      RichEdit.SelStart := RichEdit.GetTextLen;
-      RichEdit.Perform(EM_SCROLLCARET, 0, 0);
-      FRichEdit.Update;
-    end;
+    if IsModified and WasAtTheEnd then
+      RichEdit.Perform(WM_VSCROLL, SB_BOTTOM, 0);
+    if WasFocused then
+      RichEdit.Perform(WM_SETFOCUS, 0, 0);
   end;
-  //AdjustToTheEnd;
 end;
 
 procedure TjachLogToVCLRichEdit.Write(ATopic: TjachLogTopicIndex;
