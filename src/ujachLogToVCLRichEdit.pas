@@ -52,6 +52,7 @@ type
     FMessagesAdded: Boolean;
     FAutoCapLineCountThreshold: Integer;
     FAutoCapLineCountStays: Integer;
+    FMaxMillisecondsAddingMessages: Cardinal;
     procedure SetRichEdit(const Value: TRichEdit);
     procedure TimerEvent(Sender: TObject);
     function GetRefreshInterval: Cardinal;
@@ -68,6 +69,7 @@ type
     procedure SetDateTimeFormat(const Value: string);
     procedure SetAutoCapLineCountStays(const Value: Integer);
     procedure SetAutoCapLineCountThreshold(const Value: Integer);
+    procedure SetMaxMillisecondsAddingMessages(const Value: Cardinal);
   public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
@@ -80,6 +82,7 @@ type
     destructor Destroy; override;
     property RichEdit: TRichEdit read FRichEdit write SetRichEdit;
     property RefreshInterval: Cardinal read GetRefreshInterval write SetRefreshInterval;
+    property MaxMillisecondsAddingMessages: Cardinal read FMaxMillisecondsAddingMessages write SetMaxMillisecondsAddingMessages;
     property FontColor[ASeverity: TLogSeverity]: TColor read GetFontColor write SetFontColor;
     property FontStyle[ASeverity: TLogSeverity]: TFontStyles read GetFontStyle write SetFontStyle;
     property MaxLength: Integer read FMaxLength write SetMaxLength;
@@ -148,6 +151,7 @@ begin
 
   FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss:zzz';
   FMaxLength := -1;
+  FMaxMillisecondsAddingMessages := 300;
 end;
 
 procedure TjachLogToVCLRichEdit.CreateTimer;
@@ -238,6 +242,12 @@ begin
   FCurrentLineLength := FMaxLength;
 end;
 
+procedure TjachLogToVCLRichEdit.SetMaxMillisecondsAddingMessages(
+  const Value: Cardinal);
+begin
+  FMaxMillisecondsAddingMessages := Value;
+end;
+
 procedure TjachLogToVCLRichEdit.SetRefreshInterval(const Value: Cardinal);
 begin
   FTimer.Interval := Value;
@@ -311,61 +321,70 @@ procedure TjachLogToVCLRichEdit.TimerEvent(Sender: TObject);
     FRichEdit.SelLength := DeleteLen;;
     FRichEdit.SelText := '';
   end;
-
 var
   lEntry: IjachLogEntry;
   IsModified: Boolean;
   WasAtTheEnd: Boolean;
   WasFocused: Boolean;
   MemorySelStart, MemorySelLength: Integer;
+  StartTick: UInt64;
 begin
-  IsModified := False;
   if not Assigned(FRichEdit) then
     Exit;
+  FTimer.Enabled := False;
+  try
+    StartTick := GetTickCount64;
+    IsModified := False;
+    if FEntries.QueueSize > 0 then
+    begin
+      if FMaxLength = -1 then
+        CalculateCurrentLength;
+      MemorySelStart := FRichEdit.SelStart;
+      MemorySelLength := FRichEdit.SelLength;
+      WasAtTheEnd := MemorySelStart >= (FRichEdit.GetTextLen - FRichEdit.Lines.Count - 1);
+      WasFocused := FRichEdit.Focused;
+      FRichEdit.Lines.BeginUpdate;
+      try
+        if (FAutoCapLineCountThreshold <> 0) and (FEntries.QueueSize > FAutoCapLineCountThreshold) then
+        begin
+          FRichEdit.Lines.Clear;
+          while FEntries.QueueSize > FAutoCapLineCountThreshold do
+          begin
+            FEntries.PopItem;
+            if GetTickCount64 - StartTick > FMaxMillisecondsAddingMessages then Break;
+          end;
+        end;
 
-  if FEntries.QueueSize > 0 then
-  begin
-    if FMaxLength = -1 then
-      CalculateCurrentLength;
-    MemorySelStart := FRichEdit.SelStart;
-    MemorySelLength := FRichEdit.SelLength;
-    WasAtTheEnd := MemorySelStart >= (FRichEdit.GetTextLen - FRichEdit.Lines.Count - 1);
-    WasFocused := FRichEdit.Focused;
-    FRichEdit.Lines.BeginUpdate;
-    try
-      if (FAutoCapLineCountThreshold <> 0) and (FEntries.QueueSize > FAutoCapLineCountThreshold) then
-      begin
-        FRichEdit.Lines.Clear;
-        while FEntries.QueueSize > FAutoCapLineCountThreshold do
-          FEntries.PopItem;
-      end;
-
-      while FEntries.QueueSize > 0 do
-      begin
         if WasFocused then
           FRichEdit.Perform(WM_KILLFOCUS, 0, 0);
-        lEntry := FEntries.PopItem;
-        if Assigned(lEntry) then
+        while FEntries.QueueSize > 0 do
         begin
-          IsModified := True;
-          Write(lEntry.Topic, lEntry.Severity, lEntry.DebugVerbosity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
+          if GetTickCount64 - StartTick > FMaxMillisecondsAddingMessages then Break;
+          lEntry := FEntries.PopItem;
+          if Assigned(lEntry) then
+          begin
+            IsModified := True;
+            Write(lEntry.Topic, lEntry.Severity, lEntry.DebugVerbosity, lEntry.LogString, lEntry.Indent, lEntry.ThreadID, lEntry.TimeStamp);
+          end;
         end;
+        CapRichEditContent(MemorySelStart, MemorySelLength);
+        if WasAtTheEnd then
+          FRichEdit.SelStart := MaxInt
+        else
+        begin
+          FRichEdit.SelStart := MemorySelStart;
+          FRichEdit.SelLength := MemorySelLength;
+        end;
+      finally
+        FRichEdit.Lines.EndUpdate;
       end;
-      CapRichEditContent(MemorySelStart, MemorySelLength);
-      if WasAtTheEnd then
-        FRichEdit.SelStart := MaxInt
-      else
-      begin
-        FRichEdit.SelStart := MemorySelStart;
-        FRichEdit.SelLength := MemorySelLength;
-      end;
-    finally
-      FRichEdit.Lines.EndUpdate;
+      if IsModified and WasAtTheEnd then
+        RichEdit.Perform(WM_VSCROLL, SB_BOTTOM, 0);
+      if WasFocused then
+        RichEdit.Perform(WM_SETFOCUS, 0, 0);
     end;
-    if IsModified and WasAtTheEnd then
-      RichEdit.Perform(WM_VSCROLL, SB_BOTTOM, 0);
-    if WasFocused then
-      RichEdit.Perform(WM_SETFOCUS, 0, 0);
+  finally
+    FTimer.Enabled := True;
   end;
 end;
 
