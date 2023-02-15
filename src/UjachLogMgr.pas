@@ -371,6 +371,7 @@ type
     {$endif}
     procedure CacheClear;
     procedure WriteCachedLog;
+    procedure GetRegisteredWriters(ARegisteredWriterList: TList<TjachLogWriter>);
   end;
 
   EjachLogError = class(Exception)
@@ -776,6 +777,18 @@ begin
   Result := FindLogWriterByClass(ALogWriterClass);
   if not Assigned(Result) then
     raise EjachLogNoWriterRegistered.CreateFmt('There''s no writer of %s class registered.', [ALogWriterClass.ClassName]);
+end;
+
+procedure TjachLog.GetRegisteredWriters(ARegisteredWriterList: TList<TjachLogWriter>);
+var
+  lRegisteredWriters: TList<TjachLogWriter>;
+begin
+  lRegisteredWriters := FRegisteredLogWriters.LockList;
+  try
+    ARegisteredWriterList.AddRange(lRegisteredWriters.ToArray);
+  finally
+    FRegisteredLogWriters.UnlockList;
+  end;
 end;
 
 function TjachLog.FindLogWriterByClass(
