@@ -76,6 +76,7 @@ end;
 constructor TjachLogToSysLogIndyUDP.Create;
 begin
   inherited;
+  FFriendlyName := 'SysLog';
   IsActive := False;
   FIdSysLog := TIdSysLog.Create(nil);
   FIdSysLogMessage := TIdSysLogMessage.Create(nil);

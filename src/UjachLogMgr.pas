@@ -138,8 +138,11 @@ type
     function GetLogLevel(Index: TjachLogTopicIndex): TLogLevel;
     procedure SetLogLevel(Index: TjachLogTopicIndex; const Value: TLogLevel);
     procedure SetDebugVerbosityThreshold(const Value: Byte);
+    procedure SetFriendlyName(const Value: string);
   protected
     const WWMAX_LEN = 255;
+    var
+      FFriendlyName: string;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); virtual;
@@ -157,6 +160,7 @@ type
     property Thread: TThread read FThread;
     property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
     property DebugVerbosityThreshold: Byte read FDebugVerbosityThreshold write SetDebugVerbosityThreshold;
+    property FriendlyName: string read FFriendlyName write SetFriendlyName;
   end;
 
   TjachLogWriterClass = class of TjachLogWriter;
@@ -541,6 +545,7 @@ begin
   FLock := TCriticalSection.Create;
   for I := Low(FLogLevel) to High(FLogLevel) do
     FLogLevel[I] := ADefaultTopicLevel;
+  FFriendlyName := Self.ClassName;
 end;
 
 destructor TjachLogWriter.Destroy;
@@ -573,6 +578,11 @@ end;
 procedure TjachLogWriter.SetDebugVerbosityThreshold(const Value: Byte);
 begin
   FDebugVerbosityThreshold := Value;
+end;
+
+procedure TjachLogWriter.SetFriendlyName(const Value: string);
+begin
+  FFriendlyName := Value;
 end;
 
 procedure TjachLogWriter.SetIsActive(const Value: Boolean);

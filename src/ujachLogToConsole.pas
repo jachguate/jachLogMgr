@@ -44,6 +44,7 @@ uses
 type
   TjachLogToConsole = class(TjachLogWriter)
   public
+    constructor Create(ADefaultTopicLevel: TLogLevel = llAll); override;
     procedure Write(ATopic: TjachLogTopicIndex; ASeverity: TLogSeverity;
       ADebugVerbosity: Byte; const S, AIndentSpaces: string;
       const AThreadID: TThreadID; const ATimeStamp: TDateTime); override;
@@ -60,6 +61,12 @@ uses
   , System.Types;
 
 { TjachLogToConsole }
+
+constructor TjachLogToConsole.Create(ADefaultTopicLevel: TLogLevel);
+begin
+  inherited;
+  FFriendlyName := 'Console';
+end;
 
 procedure TjachLogToConsole.Write(ATopic: TjachLogTopicIndex;
   ASeverity: TLogSeverity; ADebugVerbosity: Byte; const S, AIndentSpaces: string;

@@ -121,6 +121,7 @@ end;
 constructor TjachLogToDisk.Create(ADefaultTopicLevel: TLogLevel = llAll);
 begin
   inherited;
+  FFriendlyName := 'Disk';
   FMaxFileSize := 20 * 1024 * 1024; //20MB
   FMaxLineSize := 255;
   FBasePath := GetDefaultBasePath;

@@ -123,6 +123,7 @@ end;
 constructor TjachLogToVCLRichEdit.Create;
 begin
   inherited;
+  FFriendlyName := 'Screen';
   FEntries := TThreadedQueue<IjachLogEntry>.Create(32768, 0, 0);
   IsActive := False;
   if GetIsMainThread then
