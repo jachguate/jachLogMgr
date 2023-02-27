@@ -656,7 +656,7 @@ begin
 
       Start := Start + Length(Result[Idx]) + CharsToIgnore;
       Inc(Idx);
-    until Start >= Length(S);
+    until Start > Length(S);
   end;
 end;
 
