@@ -14,10 +14,9 @@ The main features of the library are:
 * Multiple logging destinations
 	- Disk (auto rotate by size limit)
 	- Console
-	- Visual rich edit component (VCL and FMX) (Coming in v 2.1)
-	- Local or remote Syslog 
-		+ Indy based (Coming in v 2.2)
-		+ ICS based (Only if required by the community)
+	- Visual rich edit component (VCL) and Memo component (FMX) 
+	- Local or remote Syslog (Indy based)
+		+ ICS based (Will be added if required by the community)
 		+ Based on other TCP/UDP library (Only if required by the community)
 	- Windows event log (Coming on v 2.5)
 	- Android standard log (Coming on v 2.6)
@@ -26,11 +25,15 @@ The main features of the library are:
 
 ## Delphi versions
 
-Delphi versions supported: 10 and Up. (Last version tested is Delphi 11). If you successfully use it on an earlier version, please let the author know that.
+Delphi versions supported: 10 and Up. (Last version tested is Delphi 11). It may work in Delphi 2009 or greater. If you successfully use it on an earlier version, please let the author know that.
 
 ## Documentation
 
 The official documentation resides in the project wiki at github: [jachLog documentatrion](https://github.com/jachguate/jachLogMgr/wiki).
+
+## GetIt
+
+You can download and install the library via GetIt package manager inside Delphi/RAD Studio IDE.
 
 ## Getting started
 
