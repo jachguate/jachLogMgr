@@ -1723,7 +1723,7 @@ begin
       if FUseSeparateThreadToWrite then
       begin
         ALogWriter.FThread.Terminate;
-        ALogWriter.FThread.WaitFor; //todo: check if this is correct
+        ALogWriter.FThread.WaitFor; //todo -ojachguate: check if this is correct
       end;
     finally
       FRegisteredLogWriters.UnlockList;
@@ -1882,7 +1882,7 @@ begin
                 try
                   TjachLogWriterThread(Writer.Thread).FEntryQueue.PushItem(AEntry);
                 except
-                  //todo: fire error event
+                  //todo -ojachguate: fire error event
                   ;
                 end;
           finally
