@@ -1877,6 +1877,7 @@ begin
               if     (not Terminated)
                  and (Writer.IsActive)
                  and (Byte(Writer.LogLevel[AEntry.Topic]) > Byte(AEntry.Severity))
+                 and ((AEntry.Severity <> lsDebug) or (AEntry.DebugVerbosity <= Writer.FDebugVerbosityThreshold))
               then
                 try
                   TjachLogWriterThread(Writer.Thread).FEntryQueue.PushItem(AEntry);
