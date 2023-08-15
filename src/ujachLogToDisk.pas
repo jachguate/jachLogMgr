@@ -247,7 +247,7 @@ var
   Msgs: TStringDynArray;
   I: Integer;
 begin
-  DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', ATimeStamp)
+  DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', ATimeStamp)
     , AThreadID
     , LogSeverityToStr(ASeverity)]);
   Margin := StringOfChar(' ', Length(DT));

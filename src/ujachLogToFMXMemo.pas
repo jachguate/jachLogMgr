@@ -117,7 +117,7 @@ begin
     CreateTimer
   else
     TThread.Synchronize(TThread.Current, CreateTimer);
-  FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss:zzz';
+  FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss.zzz';
   FMaxLineSize := -1;
 end;
 

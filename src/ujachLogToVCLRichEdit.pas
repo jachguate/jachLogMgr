@@ -150,7 +150,7 @@ begin
   FFontStyle[lsInfo]      := [];
   FFontStyle[lsDebug]     := [fsItalic];
 
-  FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss:zzz';
+  FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss.zzz';
   FMaxLength := -1;
   FMaxMillisecondsAddingMessages := 300;
 end;

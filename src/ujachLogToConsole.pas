@@ -83,11 +83,11 @@ begin
     if not GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), lpConsoleScreenBufferInfo) then
       RaiseLastOSError;
     if IsMultiThread then
-      DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', Now)
+      DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now)
         , GetCurrentThreadID
         , LogSeverityToStr(ASeverity)])
     else
-      DT := Format('%s %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss:zzz', Now)
+      DT := Format('%s %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now)
         , LogSeverityToStr(ASeverity)]);
 
     Margin := StringOfChar(' ', Length(DT));
