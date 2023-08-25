@@ -144,6 +144,8 @@ type
     var
       FFriendlyName: string;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
+    procedure InitializeThread; virtual;
+    procedure UninitializeThread; virtual;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); virtual;
     destructor Destroy; override;
@@ -571,6 +573,11 @@ begin
   Result := FLogLevel[Index];
 end;
 
+procedure TjachLogWriter.InitializeThread;
+begin
+
+end;
+
 procedure TjachLogWriter.OpenLogChannel;
 begin
 
@@ -600,6 +607,11 @@ end;
 procedure TjachLogWriter.SetWriterThread(AThread: TThread);
 begin
   FThread := AThread;
+end;
+
+procedure TjachLogWriter.UninitializeThread;
+begin
+
 end;
 
 function TjachLogWriter.WordWrap(const S: string;
@@ -1948,30 +1960,35 @@ procedure TjachLogWriterThread.Execute;
 begin
   inherited;
   {$ifdef debug}NameThreadForDebugging(FWriter.ClassName + ' writer thread');{$endif}
-  while not Terminated do
-  begin
-    if     (not FEntryQueue.ShutDown)
-       and (FEntryQueue.QueueSize > 0) then
+  FWriter.InitializeThread;
+  try
+    while not Terminated do
     begin
-      FWriter.GetLock.Enter;
-      try
-        FWriter.OpenLogChannel;
+      if     (not FEntryQueue.ShutDown)
+         and (FEntryQueue.QueueSize > 0) then
+      begin
+        FWriter.GetLock.Enter;
         try
-          while     (not Terminated)
-                and (not FEntryQueue.ShutDown)
-                and (FEntryQueue.QueueSize > 0) do
-          begin
-            FWriter.WriteEntry(FEntryQueue.PopItem);
+          FWriter.OpenLogChannel;
+          try
+            while     (not Terminated)
+                  and (not FEntryQueue.ShutDown)
+                  and (FEntryQueue.QueueSize > 0) do
+            begin
+              FWriter.WriteEntry(FEntryQueue.PopItem);
+            end;
+          finally
+            FWriter.CloseLogChannel;
           end;
         finally
-          FWriter.CloseLogChannel;
+          FWriter.GetLock.Leave;
         end;
-      finally
-        FWriter.GetLock.Leave;
-      end;
-    end
-    else
-      WaitForSingleObject(FTerminatedEvent.Handle, 50);
+      end
+      else
+        WaitForSingleObject(FTerminatedEvent.Handle, 50);
+    end;
+  finally
+    FWriter.UninitializeThread;
   end;
 end;
 
