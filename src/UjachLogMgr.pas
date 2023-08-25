@@ -127,6 +127,8 @@ type
   TjachLogEntryList = class(TList<IjachLogEntry>)
   end;
 
+  TjachLog = class;
+
   TjachLogWriter = class
   private
     FLock: TCriticalSection;
@@ -143,6 +145,7 @@ type
     const WWMAX_LEN = 255;
     var
       FFriendlyName: string;
+      FLog: TjachLog;
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
     procedure InitializeThread; virtual;
     procedure UninitializeThread; virtual;
@@ -176,7 +179,6 @@ type
     property EntryList: TjachLogEntryList read FEntryList;
   end;
 
-type
   TjachLog = class
   private
     FCS: TCriticalSection;
@@ -1658,6 +1660,7 @@ procedure TjachLog.RegisterLogWriter(ALogWriter: TjachLogWriter);
 begin
   FCS.Enter;
   try
+    ALogWriter.FLog := Self;
     FRegisteredLogWriters.Add(ALogWriter);
     if FUseSeparateThreadToWrite then
       ALogWriter.SetWriterThread(TjachLogWriterThread.Create(Self, ALogWriter));
@@ -1964,9 +1967,9 @@ begin
   try
     while not Terminated do
     begin
-      if     (not FEntryQueue.ShutDown)
-         and (FEntryQueue.QueueSize > 0) then
-      begin
+        if     (not FEntryQueue.ShutDown)
+           and (FEntryQueue.QueueSize > 0) then
+        begin
         FWriter.GetLock.Enter;
         try
           FWriter.OpenLogChannel;
@@ -1983,10 +1986,10 @@ begin
         finally
           FWriter.GetLock.Leave;
         end;
-      end
-      else
-        WaitForSingleObject(FTerminatedEvent.Handle, 50);
-    end;
+        end
+        else
+          WaitForSingleObject(FTerminatedEvent.Handle, 50);
+      end;
   finally
     FWriter.UninitializeThread;
   end;
