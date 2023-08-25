@@ -149,6 +149,7 @@ type
     function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
     procedure InitializeThread; virtual;
     procedure UninitializeThread; virtual;
+    procedure WriteEntries(AQueue: TThreadedQueue<IjachLogEntry>); virtual;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); virtual;
     destructor Destroy; override;
@@ -671,6 +672,25 @@ begin
       Start := Start + Length(Result[Idx]) + CharsToIgnore;
       Inc(Idx);
     until Start > Length(S);
+  end;
+end;
+
+procedure TjachLogWriter.WriteEntries(AQueue: TThreadedQueue<IjachLogEntry>);
+begin
+  GetLock.Enter;
+  try
+    OpenLogChannel;
+    try
+      while     (not AQueue.ShutDown)
+            and (AQueue.QueueSize > 0) do
+      begin
+        WriteEntry(AQueue.PopItem);
+      end;
+    finally
+      CloseLogChannel;
+    end;
+  finally
+    GetLock.Leave;
   end;
 end;
 
@@ -1967,29 +1987,20 @@ begin
   try
     while not Terminated do
     begin
+      try
+
         if     (not FEntryQueue.ShutDown)
            and (FEntryQueue.QueueSize > 0) then
         begin
-        FWriter.GetLock.Enter;
-        try
-          FWriter.OpenLogChannel;
-          try
-            while     (not Terminated)
-                  and (not FEntryQueue.ShutDown)
-                  and (FEntryQueue.QueueSize > 0) do
-            begin
-              FWriter.WriteEntry(FEntryQueue.PopItem);
-            end;
-          finally
-            FWriter.CloseLogChannel;
-          end;
-        finally
-          FWriter.GetLock.Leave;
-        end;
+          FWriter.WriteEntries(FEntryQueue);
         end
         else
           WaitForSingleObject(FTerminatedEvent.Handle, 50);
+      except
+        on E:Exception do
+          FLog.LogError('Error writing log to ' + FWriter.FriendlyName, E);
       end;
+    end;
   finally
     FWriter.UninitializeThread;
   end;
