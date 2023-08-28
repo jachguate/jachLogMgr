@@ -196,6 +196,7 @@ type
     FUseSeparateThreadToWrite: Boolean;
     FWriteThread: TThread;
     FDebugVerbosityThreshold: Byte;
+    FTopicErrorLog: TjachLogTopicIndex;
     function GetExceptionStr(E: Exception): string;
     procedure CacheLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const S: string); inline;
     procedure SetIsCached(const Value: Boolean);
@@ -211,6 +212,7 @@ type
     procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const S: string); overload;
     procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; E: Exception); overload; inline;
     procedure InternalLog(ATopic: TjachLogTopicIndex; ALogSeverity: TLogSeverity; ADebugVerbosity: Byte; const ExtraMsg: string; E: Exception); overload; inline;
+    procedure SetTopicErrorLog(const Value: TjachLogTopicIndex);
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llInfo; ADefaultTopic: TjachLogTopicIndex = 0);
     destructor Destroy; override;
@@ -220,6 +222,7 @@ type
     property LogLevel[Index: TjachLogTopicIndex]: TLogLevel read GetLogLevel write SetLogLevel;
     property TopicName[Index: TjachLogTopicIndex]: string read GetTopicName write SetTopicName;
     property DefaultTopic: TjachLogTopicIndex read FDefaultTopic write FDefaultTopic;
+    property TopicErrorLog: TjachLogTopicIndex read FTopicErrorLog write SetTopicErrorLog;
     property IncludeTopicName: Boolean read FIncludeTopicName write SetIncludeTopicName;
     property IsActive: Boolean read FIsActive write FIsActive;
     property UseSeparateThreadToWrite: Boolean read FUseSeparateThreadToWrite write SetUseSeparateThreadToWrite;
@@ -1710,6 +1713,11 @@ begin
   end;
 end;
 
+procedure TjachLog.SetTopicErrorLog(const Value: TjachLogTopicIndex);
+begin
+  FTopicErrorLog := Value;
+end;
+
 procedure TjachLog.SetLogLevel(Index: TjachLogTopicIndex;
   const Value: TLogLevel);
 begin
@@ -1988,7 +1996,6 @@ begin
     while not Terminated do
     begin
       try
-
         if     (not FEntryQueue.ShutDown)
            and (FEntryQueue.QueueSize > 0) then
         begin
@@ -1998,7 +2005,9 @@ begin
           WaitForSingleObject(FTerminatedEvent.Handle, 50);
       except
         on E:Exception do
-          FLog.LogError('Error writing log to ' + FWriter.FriendlyName, E);
+        begin
+          FLog.LogError(FLog.FTopicErrorLog, 'Error writing log to ' + FWriter.FriendlyName, E);
+        end;
       end;
     end;
   finally
