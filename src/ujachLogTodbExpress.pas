@@ -40,7 +40,9 @@ uses
   System.Classes, UjachLogMgr, UjachLogToDB, Data.DB, Data.DBXCommon, Data.SqlExpr;
 
 type
-  TSQLConnectionEvent = procedure(AConnection: TSQLConnection) of object;
+  TjachLogTodbExpress = class;
+
+  TSQLConnectionEvent = procedure(ALogWriter: TjachLogTodbExpress; AConnection: TSQLConnection) of object;
 
   TjachLogTodbExpress = class(TjachLogToDB)
   protected
@@ -139,7 +141,7 @@ begin
       Conn.Params.Values[ParamName] := FParams.Values[ParamName];
   end;
   if Assigned(FOnConfigureConnection) then
-    FOnConfigureConnection(Sender as TSQLConnection);
+    FOnConfigureConnection(Self, Sender as TSQLConnection);
 end;
 
 constructor TjachLogTodbExpress.Create(ADefaultTopicLevel: TLogLevel);
