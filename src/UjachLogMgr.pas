@@ -2008,6 +2008,7 @@ begin
         on E:Exception do
         begin
           FLog.LogError(FLog.FTopicErrorLog, 'Error writing log to ' + FWriter.FriendlyName, E);
+          WaitForSingleObject(FTerminatedEvent.Handle, 100);
         end;
       end;
     end;
