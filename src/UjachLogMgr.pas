@@ -146,10 +146,11 @@ type
     var
       FFriendlyName: string;
       FLog: TjachLog;
-    function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
     procedure InitializeThread; virtual;
     procedure UninitializeThread; virtual;
     procedure WriteEntries(AQueue: TThreadedQueue<IjachLogEntry>); virtual;
+  public
+    class function WordWrap(const S: string; MaxLen: UInt16 = WWMAX_LEN): TStringDynArray; virtual;
   public
     constructor Create(ADefaultTopicLevel: TLogLevel = llAll); virtual;
     destructor Destroy; override;
@@ -620,7 +621,7 @@ begin
 
 end;
 
-function TjachLogWriter.WordWrap(const S: string;
+class function TjachLogWriter.WordWrap(const S: string;
   MaxLen: UInt16): TStringDynArray;
 const
   CR = #13;
