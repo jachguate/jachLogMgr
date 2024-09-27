@@ -219,7 +219,7 @@ var
   Temp: string;
 begin
   Temp := Value.Trim;
-  if (not TPath.HasValidFileNameChars(Temp, False)) then
+  if (not TPath.HasValidPathChars(Temp, False)) then
     raise EInvalidCharsInFileName.CreateFmt('Invalid characters in base file path: %s', [Temp]);
   FBasePath := Temp;
   UpdateLogFileName;
