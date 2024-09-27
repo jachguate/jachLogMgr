@@ -48,6 +48,7 @@ type
   private
     FBasePath: string;
     FFileNamePrefix: string;
+    FFileNameMain: string;
     FFileNameSuffix: string;
     FFileNameExtension: string;
     FLogFileName: string;
@@ -57,6 +58,7 @@ type
     FMaxLineSize: UInt16;
     FFileCountToKeepInRotation: Integer;
     procedure SetFileNamePrefix(const Value: string);
+    procedure SetFileNameMain(const Value: string);
     procedure SetFileNameSuffix(const Value: string);
     procedure SetFileNameExtension(const Value: string);
     procedure SetBasePath(const Value: string);
@@ -64,6 +66,7 @@ type
     procedure SetMaxFileSize(const Value: UInt64);
     procedure SetMaxLineSize(const Value: UInt16);
     procedure SetFileCountToKeepInRotation(const Value: Integer);
+    function GetDefaultFileNameMain: string;
   public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
@@ -76,6 +79,7 @@ type
     destructor Destroy; override;
     property BasePath: string read FBasePath write SetBasePath;
     property FileNamePrefix: string read FFileNamePrefix write SetFileNamePrefix;
+    property FileNameMain: string read FFileNameMain write SetFileNameMain;
     property FileNameSuffix: string read FFileNameSuffix write SetFileNameSuffix;
     property FileNameExtension: string read FFileNameExtension write SetFileNameExtension;
     property MaxFileSize: UInt64 read FMaxFileSize write SetMaxFileSize;
@@ -129,6 +133,7 @@ begin
   FMaxFileSize := 20 * 1024 * 1024; //20MB
   FMaxLineSize := 255;
   FBasePath := GetDefaultBasePath;
+  FFileNameMain := GetDefaultFileNameMain;
   FFileNameExtension := '.log';
   UpdateLogFileName;
   FileCountToKeepInRotation := 5;
@@ -139,6 +144,14 @@ begin
   if FIsOpen then
     CloseLogChannel;
   inherited;
+end;
+
+function TjachLogToDisk.GetDefaultFileNameMain: string;
+var
+  Temp: string;
+begin
+  Temp := TPath.ChangeExtension(TPath.GetFileName(ParamStr(0)), '.x');
+  Result := Copy(Temp, 1, Length(Temp) - 2);
 end;
 
 procedure TjachLogToDisk.OpenLogChannel;
@@ -221,6 +234,17 @@ begin
   UpdateLogFileName;
 end;
 
+procedure TjachLogToDisk.SetFileNameMain(const Value: string);
+var
+  Temp: string;
+begin
+  Temp := Value.Trim;
+  if (not TPath.HasValidFileNameChars(Temp, False)) or (Pos(PathDelim, Temp) <> 0) then
+    raise EInvalidCharsInFileName.CreateFmt('Invalid characters in file name: %s', [Temp]);
+  FFileNameMain := Temp;
+  UpdateLogFileName;
+end;
+
 procedure TjachLogToDisk.SetFileNamePrefix(const Value: string);
 begin
   if TPath.HasValidFileNameChars(Value.Trim, False) then
@@ -248,12 +272,8 @@ begin
 end;
 
 procedure TjachLogToDisk.UpdateLogFileName;
-var
-  Temp: string;
 begin
-  Temp := TPath.ChangeExtension(TPath.GetFileName(ParamStr(0)), '.log');
-  Temp := FFileNamePrefix + Copy(Temp, 1, Length(Temp) - 4) + FFileNameSuffix + FFileNameExtension;
-  FLogFileName := TPath.Combine(FBasePath, Temp);
+  FLogFileName := TPath.Combine(FBasePath, FFileNamePrefix + FFileNameMain + FFileNameSuffix + FFileNameExtension);
 end;
 
 procedure TjachLogToDisk.Write(ATopic: TjachLogTopicIndex;
