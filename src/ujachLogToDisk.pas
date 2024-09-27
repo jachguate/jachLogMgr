@@ -57,6 +57,7 @@ type
     FMaxFileSize: UInt64;
     FMaxLineSize: UInt16;
     FFileCountToKeepInRotation: Integer;
+    FDateTimeFormat: string;
     procedure SetFileNamePrefix(const Value: string);
     procedure SetFileNameMain(const Value: string);
     procedure SetFileNameSuffix(const Value: string);
@@ -67,6 +68,7 @@ type
     procedure SetMaxLineSize(const Value: UInt16);
     procedure SetFileCountToKeepInRotation(const Value: Integer);
     function GetDefaultFileNameMain: string;
+    procedure SetDateTimeFormat(const Value: string);
   public
     procedure OpenLogChannel; override;
     procedure CloseLogChannel; override;
@@ -85,6 +87,7 @@ type
     property MaxFileSize: UInt64 read FMaxFileSize write SetMaxFileSize;
     property MaxLineSize: UInt16 read FMaxLineSize write SetMaxLineSize;
     property FileCountToKeepInRotation: Integer read FFileCountToKeepInRotation write SetFileCountToKeepInRotation;
+    property DateTimeFormat: string read FDateTimeFormat write SetDateTimeFormat;
   end;
 
 implementation
@@ -137,6 +140,7 @@ begin
   FFileNameExtension := '.log';
   UpdateLogFileName;
   FileCountToKeepInRotation := 5;
+  FDateTimeFormat := 'yyyy-mm-dd hh:nn:ss.zzz';
 end;
 
 destructor TjachLogToDisk.Destroy;
@@ -215,6 +219,11 @@ begin
   UpdateLogFileName;
 end;
 
+procedure TjachLogToDisk.SetDateTimeFormat(const Value: string);
+begin
+  FDateTimeFormat := Value;
+end;
+
 procedure TjachLogToDisk.SetFileCountToKeepInRotation(const Value: Integer);
 begin
   if (Value > 0) and (Value < 100) then
@@ -285,7 +294,7 @@ var
   Msgs: TStringDynArray;
   I: Integer;
 begin
-  DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', ATimeStamp)
+  DT := Format('%s %.8x %-5s', [FormatDateTime(FDateTimeFormat, ATimeStamp)
     , AThreadID
     , LogSeverityToStr(ASeverity)]);
   Margin := StringOfChar(' ', Length(DT));
