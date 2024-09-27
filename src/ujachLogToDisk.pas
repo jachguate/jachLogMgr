@@ -89,6 +89,7 @@ type
     property MaxLineSize: UInt16 read FMaxLineSize write SetMaxLineSize;
     property FileCountToKeepInRotation: Integer read FFileCountToKeepInRotation write SetFileCountToKeepInRotation;
     property DateTimeFormat: string read FDateTimeFormat write SetDateTimeFormat;
+    property LogFileName: string read FLogFileName;
   end;
 
 implementation
