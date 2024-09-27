@@ -31,30 +31,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 }
-
 unit ujachLogToDisk;
 
 interface
-
 uses
-  UjachLogMgr, System.SyncObjs;
+    UjachLogMgr
+  , System.SyncObjs
+  , System.SysUtils
+  ;
 
 type
+  EInvalidCharsInFileName = class(Exception)
+  end;
+
   TjachLogToDisk = class(TjachLogWriter)
   private
     FBasePath: string;
     FFileNamePrefix: string;
     FFileNameSuffix: string;
-
+    FFileNameExtension: string;
     FLogFileName: string;
     FLogFile: TextFile;
-
     FIsOpen: Boolean;
     FMaxFileSize: UInt64;
     FMaxLineSize: UInt16;
     FFileCountToKeepInRotation: Integer;
     procedure SetFileNamePrefix(const Value: string);
     procedure SetFileNameSuffix(const Value: string);
+    procedure SetFileNameExtension(const Value: string);
     procedure SetBasePath(const Value: string);
     procedure UpdateLogFileName;
     procedure SetMaxFileSize(const Value: UInt64);
@@ -73,6 +77,7 @@ type
     property BasePath: string read FBasePath write SetBasePath;
     property FileNamePrefix: string read FFileNamePrefix write SetFileNamePrefix;
     property FileNameSuffix: string read FFileNameSuffix write SetFileNameSuffix;
+    property FileNameExtension: string read FFileNameExtension write SetFileNameExtension;
     property MaxFileSize: UInt64 read FMaxFileSize write SetMaxFileSize;
     property MaxLineSize: UInt16 read FMaxLineSize write SetMaxLineSize;
     property FileCountToKeepInRotation: Integer read FFileCountToKeepInRotation write SetFileCountToKeepInRotation;
@@ -85,7 +90,6 @@ uses
   {$ifdef MSWindows}
   , Windows
   {$endif}
-  , System.SysUtils
   , System.Types;
 
 function GetDefaultBasePath: string;
@@ -125,6 +129,7 @@ begin
   FMaxFileSize := 20 * 1024 * 1024; //20MB
   FMaxLineSize := 255;
   FBasePath := GetDefaultBasePath;
+  FFileNameExtension := '.log';
   UpdateLogFileName;
   FileCountToKeepInRotation := 5;
 end;
@@ -203,6 +208,19 @@ begin
     FFileCountToKeepInRotation := Value;
 end;
 
+procedure TjachLogToDisk.SetFileNameExtension(const Value: string);
+var
+  Temp: string;
+begin
+  Temp := Value.Trim;
+  if (not TPath.HasValidFileNameChars(Temp, False)) or (Pos(PathDelim, Temp) <> 0) then
+    raise EInvalidCharsInFileName.CreateFmt('Invalid characters in file name extension: %s', [Temp]);
+  if (Temp <> '') and (Temp[1] <> '.') then
+    Temp := '.' + Temp;
+  FFileNameExtension := Temp;
+  UpdateLogFileName;
+end;
+
 procedure TjachLogToDisk.SetFileNamePrefix(const Value: string);
 begin
   if TPath.HasValidFileNameChars(Value.Trim, False) then
@@ -234,7 +252,7 @@ var
   Temp: string;
 begin
   Temp := TPath.ChangeExtension(TPath.GetFileName(ParamStr(0)), '.log');
-  Temp := FFileNamePrefix + Copy(Temp, 1, Length(Temp) - 4) + FFileNameSuffix + '.log';
+  Temp := FFileNamePrefix + Copy(Temp, 1, Length(Temp) - 4) + FFileNameSuffix + FFileNameExtension;
   FLogFileName := TPath.Combine(FBasePath, Temp);
 end;
 
