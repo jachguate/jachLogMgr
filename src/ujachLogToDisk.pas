@@ -67,6 +67,7 @@ type
     procedure SetMaxFileSize(const Value: UInt64);
     procedure SetMaxLineSize(const Value: UInt16);
     procedure SetFileCountToKeepInRotation(const Value: Integer);
+    function GetDefaultBasePath: string;
     function GetDefaultFileNameMain: string;
     procedure SetDateTimeFormat(const Value: string);
   public
@@ -98,11 +99,6 @@ uses
   , Windows
   {$endif}
   , System.Types;
-
-function GetDefaultBasePath: string;
-begin
-  Result := TPath.GetPublicPath() + PathDelim + 'log';
-end;
 
 {$ifdef MSWindows}
 function MyGetFileSize(const aFilename: String): Int64;
@@ -148,6 +144,11 @@ begin
   if FIsOpen then
     CloseLogChannel;
   inherited;
+end;
+
+function TjachLogToDisk.GetDefaultBasePath: string;
+begin
+  Result := TPath.GetPublicPath() + PathDelim + 'log';
 end;
 
 function TjachLogToDisk.GetDefaultFileNameMain: string;
@@ -213,9 +214,13 @@ begin
 end;
 
 procedure TjachLogToDisk.SetBasePath(const Value: string);
+var
+  Temp: string;
 begin
-  if TPath.HasValidPathChars(Value.Trim, False) then
-    FBasePath := Value.Trim;
+  Temp := Value.Trim;
+  if (not TPath.HasValidFileNameChars(Temp, False)) then
+    raise EInvalidCharsInFileName.CreateFmt('Invalid characters in base file path: %s', [Temp]);
+  FBasePath := Temp;
   UpdateLogFileName;
 end;
 
@@ -255,16 +260,24 @@ begin
 end;
 
 procedure TjachLogToDisk.SetFileNamePrefix(const Value: string);
+var
+  Temp: string;
 begin
-  if TPath.HasValidFileNameChars(Value.Trim, False) then
-    FFileNamePrefix := Value.Trim;
+  Temp := Value.Trim;
+  if (not TPath.HasValidFileNameChars(Temp, False)) or (Pos(PathDelim, Temp) <> 0) then
+    raise EInvalidCharsInFileName.CreateFmt('Invalid characters in file name prefix: %s', [Temp]);
+  FFileNamePrefix := Temp;
   UpdateLogFileName;
 end;
 
 procedure TjachLogToDisk.SetFileNameSuffix(const Value: string);
+var
+  Temp: string;
 begin
-  if TPath.HasValidFileNameChars(Value.Trim, False) then
-    FFileNameSuffix := Value.Trim;
+  Temp := Value.Trim;
+  if (not TPath.HasValidFileNameChars(Temp, False)) or (Pos(PathDelim, Temp) <> 0) then
+    raise EInvalidCharsInFileName.CreateFmt('Invalid characters in file name suffix: %s', [Temp]);
+  FFileNameSuffix := Temp;
   UpdateLogFileName;
 end;
 
