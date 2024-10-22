@@ -64,8 +64,13 @@ unit ujachLogMgr;
 
 interface
 
-uses Classes, System.SysUtils, System.Types, System.SyncObjs,
-  System.Generics.Collections;
+uses
+    Classes
+  , System.SysUtils
+  , System.Types
+  , System.SyncObjs
+  , System.Generics.Collections
+  ;
 
 //adjust your symbols before the unit declaration, do not touch this part
 {$ifdef ForceLogWithoutTopic}
@@ -397,14 +402,19 @@ var
   jachLog: TjachLog;
 
 implementation
-uses StrUtils,
-     {$ifdef MSWindows}
-     Winapi.Windows,
-     {$endif}
-     {$ifdef HAS_EXCEPTION_STACKTRACE}
-     JclDebug,
-     {$endif HAS_EXCEPTION_STACKTRACE}
-     System.IOUtils;
+uses
+    StrUtils
+    {$ifdef MSWindows}
+  , Winapi.Windows
+    {$endif}
+    {$ifdef Linux}
+  , Posix.Pthread
+    {$endif}
+    {$ifdef HAS_EXCEPTION_STACKTRACE}
+  , JclDebug
+    {$endif HAS_EXCEPTION_STACKTRACE}
+  , System.IOUtils
+  ;
 
 type
   TLogEntry = class(TInterfacedObject, IjachLogEntry)
@@ -2003,12 +2013,12 @@ begin
           FWriter.WriteEntries(FEntryQueue);
         end
         else
-          WaitForSingleObject(FTerminatedEvent.Handle, 50);
+          FTerminatedEvent.WaitFor(50);
       except
         on E:Exception do
         begin
           FLog.LogError(FLog.FTopicErrorLog, 'Error writing log to ' + FWriter.FriendlyName, E);
-          WaitForSingleObject(FTerminatedEvent.Handle, 100);
+          FTerminatedEvent.WaitFor(100);
         end;
       end;
     end;
