@@ -803,6 +803,7 @@ end;
 
 function TjachLog.GetExceptionStr(E: Exception): string;
 begin
+  if not Assigned(E) then Exit('');
   Result := Format('%s'#13'%s', [E.ClassName, E.Message]);
   {$ifdef HAS_EXCEPTION_STACKTRACE}
   Result := Result + #13 + E.StackTrace;
