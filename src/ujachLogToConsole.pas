@@ -76,25 +76,32 @@ var
   Margin: string;
   Msgs: TStringDynArray;
   I: Integer;
+  {$ifdef Windows}
   lpConsoleScreenBufferInfo: _CONSOLE_SCREEN_BUFFER_INFO;
+  {$endif Windows}
   MaxWidth: Integer;
 begin
   try
+    {$ifdef Windows}
     if not GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), lpConsoleScreenBufferInfo) then
       RaiseLastOSError;
+    {$endif Windows}
     if IsMultiThread then
       DT := Format('%s %.8x %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now)
-        , GetCurrentThreadID
+        , AThreadID
         , LogSeverityToStr(ASeverity)])
     else
       DT := Format('%s %-5s', [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now)
         , LogSeverityToStr(ASeverity)]);
 
     Margin := StringOfChar(' ', Length(DT));
+    {$ifdef Windows}
     MaxWidth := lpConsoleScreenBufferInfo.dwSize.X - Length(AIndentSpaces) - Length(DT) - 2;
+    {$else}
+    MaxWidth := 80;
+    {$endif}
     if MaxWidth < 10 then
       MaxWidth := 10;
-
     Msgs := WordWrap(S, MaxWidth);
     Writeln(DT + ' ' + AIndentSpaces + Msgs[0]);
     for I := 1 to High(Msgs) do
