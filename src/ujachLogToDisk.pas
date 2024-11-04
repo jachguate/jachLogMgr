@@ -233,7 +233,7 @@ end;
 procedure TjachLogToDisk.SetFileCountToKeepInRotation(const Value: Integer);
 begin
   if (Value > 0) and (Value < 100) then
-    FFileCountToKeepInRotation := Value;
+    System.AtomicExchange(FFileCountToKeepInRotation, Value);  
 end;
 
 procedure TjachLogToDisk.SetFileNameExtension(const Value: string);
